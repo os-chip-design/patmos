@@ -152,7 +152,8 @@ class SPI(Count: Int) extends Module {
       CntReg := CntReg + 1.U
       StateReg := boot
 
-      when(CntReg === "h000F".U){
+      when(CntReg === "h3fff".U){
+        io.CE := false.B
         ClockReset := true.B
         StateReg := resetEnable
         CntReg := 0.U
@@ -160,6 +161,8 @@ class SPI(Count: Int) extends Module {
     }
     is(resetEnable) {
       io.SPI_interface.CE := false.B
+      ClockEn := true.B
+
       StateReg := resetEnable
       io.SPI_interface.MOSI := CMDResetEnable(7.U - CntReg)
       CntReg := CntReg;
@@ -178,6 +181,7 @@ class SPI(Count: Int) extends Module {
     is(resetWait){
       // A Delay between the two commands
       io.SPI_interface.CE := true.B
+
       StateReg := resetWait
 
       when(NextStateInv){
@@ -187,6 +191,8 @@ class SPI(Count: Int) extends Module {
     }
     is(setReset) {
       io.SPI_interface.CE := false.B
+      ClockEn := true.B
+
       StateReg := setReset
       CntReg := CntReg;
       io.SPI_interface.MOSI := CMDReset(7.U - CntReg)
@@ -225,6 +231,8 @@ class SPI(Count: Int) extends Module {
       switch(SubStateReg) {
         is(transmitCMD) {
           io.SPI_interface.CE := false.B
+          ClockEn := true.B
+
           CntReg := CntReg;
 
           io.SPI_interface.MOSI := CMDSPIRead(7.U - CntReg)
@@ -242,6 +250,8 @@ class SPI(Count: Int) extends Module {
 
         is(transmitAddress) {
           io.SPI_interface.CE := false.B
+          ClockEn := true.B
+
           CntReg := CntReg;
 
           io.SPI_interface.MOSI := io.Address(23.U - CntReg)
@@ -252,13 +262,15 @@ class SPI(Count: Int) extends Module {
           }
 
           when(CntReg === 23.U && NextStateInv) {
-            io.SPI_interface.MOSI := io.Address(0.U)
+            //io.SPI_interface.MOSI := io.Address(0.U)
             CntReg := 0.U
             SubStateReg := receiveData
           }
         }
         is(receiveData) {
           io.SPI_interface.CE := false.B
+          ClockEn := true.B
+
           SubStateReg := receiveData
           CntReg := CntReg;
           // Reads on the rising edge of SCLK
@@ -268,7 +280,7 @@ class SPI(Count: Int) extends Module {
             CntReg := CntReg + 1.U
           }
 
-          when(CntReg === 127.U && NextStateInv) {
+          when(CntReg === 128.U && NextStateInv) {
             io.DataValid := true.B
             StateReg := idle
           }
@@ -297,7 +309,7 @@ class SPI(Count: Int) extends Module {
             }.elsewhen(Carry(i)){
               Carry(i+1) := true.B
             }.elsewhen(i.U > PosReg && io.ByteEnable(i) && !Carry(i)){
-              TempAddress := io.Address + i.U //TODO Check how addresses work
+              TempAddress := io.Address + i.U
               PosReg := i.U
               Carry(i + 1) := true.B
             }.otherwise{
@@ -320,6 +332,8 @@ class SPI(Count: Int) extends Module {
         }
         is(transmitCMD) {
           io.SPI_interface.CE := false.B
+          ClockEn := true.B
+
           CntReg := CntReg;
 
           io.SPI_interface.MOSI := CMDSPIWrite(7.U - CntReg)
@@ -330,13 +344,15 @@ class SPI(Count: Int) extends Module {
           }
 
           when(CntReg === 7.U && NextStateInv) {
-            io.SPI_interface.MOSI := CMDSPIWrite(0.U)
+            //io.SPI_interface.MOSI := CMDSPIWrite(0.U)
             CntReg := 0.U
             SubStateReg := transmitAddress
           }
         }
         is(transmitAddress) {
           io.SPI_interface.CE := false.B
+          ClockEn := true.B
+
           CntReg := CntReg;
 
           io.SPI_interface.MOSI := TempAddress(23.U - CntReg)
@@ -354,6 +370,8 @@ class SPI(Count: Int) extends Module {
         }
         is(transmitData) {
           io.SPI_interface.CE := false.B
+          ClockEn := true.B
+
           CntReg := CntReg;
 
           io.SPI_interface.MOSI := io.WriteData((PosReg >> 2).asUInt)(31.U - Cat(PosReg(1,0),CntReg(2,0)).asUInt)
