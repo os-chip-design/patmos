@@ -15,7 +15,7 @@ object STATE extends Enumeration {
 
 }
 
-class Memory_helper_functions{
+class Memory_helper_functions {
 
   var last_clock = false
 
@@ -51,7 +51,7 @@ class Memory_helper_functions{
 
 }
 
-class Software_Memory_Sim(m : Module, io : SPI_Interface, fail_callback: () => Unit) {
+class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK : Bool, fail_callback: () => Unit) {
 
   var in_bits : Array[Boolean] = new Array[Boolean](8)
   var bits_read : Int = 0
@@ -128,12 +128,12 @@ class Software_Memory_Sim(m : Module, io : SPI_Interface, fail_callback: () => U
 
       m.clock.step();
 
-      if(funcs.rising_edge(io.S_CLK.peek().litToBoolean)){
+      if(funcs.rising_edge(S_CLK.peek().litToBoolean)){
 
-        if(io.CE.peek().litValue() == 0 && m.reset.peek().litValue() == 0){
-          io.CE.expect(false.B);
+        if(S_CLK.peek().litValue() == 0 && m.reset.peek().litValue() == 0){
+          CE.expect(false.B);
 
-          if(io.CE.peek().litValue() == 1){
+          if(CE.peek().litValue() == 1){
             if(bits_read != 0){
               println(Console.RED + "#CE must be hold high for the entire operation, minimum 8 bits at a time, was was pulled high "
                 + (bits_read + 1) + " bits in" + Console.RESET);
@@ -142,7 +142,7 @@ class Software_Memory_Sim(m : Module, io : SPI_Interface, fail_callback: () => U
           }
 
           //We are ready to recive data
-          val MOSI_val : Boolean = io.MOSI.peek().litToBoolean;
+          val MOSI_val : Boolean = MOSI.peek().litToBoolean;
 
           //println(Console.BLUE + "Chip clock index " + (clock_cycle + 1) + ", MOSI was: " + MOSI_val + Console.RESET);
           clock_cycle = clock_cycle + 1;
@@ -158,13 +158,11 @@ class Software_Memory_Sim(m : Module, io : SPI_Interface, fail_callback: () => U
           }
         }
 
-        if(io.CE.peek().litValue() == 1){
+        if(CE.peek().litValue() == 1){
           address = 0;
           address_bytes_read = 0;
           data_bytes_read = 0;
         }
-
-
       }
     }
   };
@@ -333,7 +331,11 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   "SPI read test software" should "pass" in {
     test(new SPI(2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
-      val Software_Memory_Sim = new Software_Memory_Sim(dut, dut.io.SPI_interface, fail);
+      val Software_Memory_Sim = new Software_Memory_Sim(dut, 
+                                                        dut.io.SPI_interface.MOSI, 
+                                                        dut.io.SPI_interface.MISO,
+                                                        dut.io.SPI_interface.CE,
+                                                        dut.io.SPI_interface.S_CLK, fail);
 
       dut.clock.setTimeout(11000);
       Software_Memory_Sim.step(200);//wait for startup
@@ -368,7 +370,11 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   "SPI write test software" should "pass" in {
     test(new SPI(2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
-      val Software_Memory_Sim = new Software_Memory_Sim(dut, dut.io.SPI_interface, fail);
+    val Software_Memory_Sim = new Software_Memory_Sim(dut, 
+                                                      dut.io.SPI_interface.MOSI, 
+                                                      dut.io.SPI_interface.MISO,
+                                                      dut.io.SPI_interface.CE,
+                                                      dut.io.SPI_interface.S_CLK, fail);
 
       dut.clock.setTimeout(11000);
       Software_Memory_Sim.step(200);//wait for startup
@@ -413,7 +419,13 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
       dut.clock.setTimeout(11000);
 
-      val Software_Memory_Sim = new Software_Memory_Sim(dut, dut.SPI.io.SPI_interface, fail);
+      val Software_Memory_Sim = new Software_Memory_Sim(dut, 
+                                                        dut.io.CE,
+                                                        dut.io.MOSI,
+                                                        dut.io.MISO,
+                                                        dut.io.S_CLK,
+                                                        fail);
+      
 
       val master = dut.io.OCP_interface.M
       val slave = dut.io.OCP_interface.S
