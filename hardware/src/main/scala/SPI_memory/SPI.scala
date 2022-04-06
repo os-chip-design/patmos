@@ -38,7 +38,7 @@ class SPI_memory_port() extends Bundle() {
   //val PosReg = Output(UInt(4.W));
 }
 
-class SPI(Count: Int) extends Module {
+class SPI(count_s_clock: Int, startup_count_to : Int = 0x3FFF) extends Module {
   val io = IO(new SPI_memory_port())
 
   // Defaults
@@ -116,7 +116,7 @@ class SPI(Count: Int) extends Module {
 
   ClkCounter := ClkCounter + 1.U
 
-  when(ClkCounter === Count.U){
+  when(ClkCounter === count_s_clock.U){
     ClkReg := !ClkReg
     ClkCounter := 0.U
 
@@ -152,8 +152,8 @@ class SPI(Count: Int) extends Module {
       CntReg := CntReg + 1.U
       StateReg := boot
 
-      when(CntReg === "h3fff".U){
-        io.CE := false.B
+      when(CntReg === startup_count_to.U){
+        io.SPI_interface.CE := false.B
         ClockReset := true.B
         StateReg := resetEnable
         CntReg := 0.U
