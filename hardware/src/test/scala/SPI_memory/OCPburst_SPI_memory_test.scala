@@ -88,13 +88,12 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
   def write_miso() = {
     if(funcs.falling_edge(S_CLK.peek().litToBoolean) && write_enable) {
-      val d : Boolean = (transmitData >> bits_read & 0x1) == 1;
+      val d : Boolean = ((transmitData >> bits_read) & 0x1) == 1;
       MISO.poke(d.B);
     } 
   }
 
   def handle_byte(b : Int): Unit = {
-    println(Console.MAGENTA + "handle_byte got" + b.toString)
     write_enable = true;
     if (state == STATE.NULL || state == STATE.RESET_ENABLE){
       if(b == 0x66)
