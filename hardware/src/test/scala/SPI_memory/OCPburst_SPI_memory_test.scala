@@ -83,25 +83,14 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
   var memory : scala.collection.mutable.Map[Int, Byte] = Map[Int, Byte]()
 
-  def write_miso(b: Byte): Boolean = {
-    var j = 0
-    //var index = 7
-    
+  var transmitData = 0
+
+  def write_miso() = {
     if(funcs.falling_edge(S_CLK.peek().litToBoolean)) {
-      val byte = b.asUInt
+      println("Falling edge")
+      val byte = transmitData.asUInt
       MISO.poke(byte(7 - bits_read))
-      //index = index - 1
     }
-    if(bits_read == 7) {
-      return true
-    }
-    
-    return false
-  }
-
-
-  def set_output(b : Byte): Unit ={
-
   }
 
   def handle_byte(b : Int): Unit = {
@@ -144,10 +133,8 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
           memory.put(address, 0)
         }
 
-        if(write_miso(memory(address))) {
-          address = address + 1
-        }
-
+        transmitData = memory(address)
+        address = address + 1
         data_bytes_read += 1;     
       }
 
@@ -163,7 +150,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       }
       else {
         memory.put(address, b.toByte);
-        address = address + 1
+        address = address + 1;
       }
     }
 
@@ -171,10 +158,11 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
   def step (n : Int = 1) : Unit = {
 
-
-    for( a <- 0 to n-1){
+    for( a <- 0 to n-1) {
 
       m.clock.step();
+
+      write_miso();
 
       if(funcs.rising_edge(S_CLK.peek().litToBoolean)){
 
@@ -205,6 +193,8 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
             handle_byte(in_val);
           }
         }
+
+        
 
         if(CE.peek().litValue() == 1){
           address = 0;
@@ -414,7 +404,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-
+/*
   "SPI write test software" should "pass" in {
     test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
@@ -516,7 +506,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-
+*/
   "Write read test software" should "pass" in {
     test(new OCPburst_SPI_memory()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
