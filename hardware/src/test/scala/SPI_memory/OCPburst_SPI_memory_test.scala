@@ -89,8 +89,8 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
   def write_miso() = {
     if(funcs.falling_edge(S_CLK.peek().litToBoolean) && write_enable) {
-      val byte = transmitData.asUInt
-      MISO.poke(byte(7 - bits_read))
+      val d : Boolean = (transmitData >> bits_read & 0x1) == 1;
+      MISO.poke(d.B);
     }
   }
 
