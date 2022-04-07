@@ -48,6 +48,19 @@ class Memory_helper_functions {
         return true
     }
   }
+  def falling_edge(b: Boolean): Boolean = {
+    val last = last_clock
+    last_clock = b;
+
+    if(b == true)
+      return false;
+    else{
+      if(last == false)
+        return false;
+      else
+        return true
+    }   
+  }
 
 }
 
@@ -66,6 +79,22 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
   var data_bytes_read = 0;
   var bytes_recived_string = "";
+
+  def write_miso(b: Byte): Unit = {
+    var j = 0
+    var index = 7
+    for(j <- 0 until 7) {
+      if(funcs.falling_edge(S_CLK.peek().litToBoolean)) {
+        val byte = b.asUInt
+        MISO.poke(byte(index))
+        index = index - 1
+      }
+      if(index == 0) {
+        return
+      }
+    }
+  }
+
 
   def set_output(b : Byte): Unit ={
 
@@ -475,6 +504,5 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-
 }
 
