@@ -88,7 +88,8 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
   def write_miso() = {
     if(funcs.falling_edge(S_CLK.peek().litToBoolean)) {
       println("Falling edge")
-      val byte = transmitData.asUInt
+      val byte = transmitData.U(8.W)
+      println(transmitData)
       MISO.poke(byte(7 - bits_read))
     }
   }
@@ -134,7 +135,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         }
 
         transmitData = memory(address)
-        address = address + 1
+        address += 1
         data_bytes_read += 1;     
       }
 
@@ -366,7 +367,7 @@ class OCP_master_commands(master : OcpBurstMasterSignals, slave : OcpBurstSlaveS
 
 class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 {
-  "SPI read test software" should "pass" in {
+/*  "SPI read test software" should "pass" in {
     test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
       val Software_Memory_Sim = new Software_Memory_Sim(dut,
@@ -404,7 +405,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-/*
+
   "SPI write test software" should "pass" in {
     test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
