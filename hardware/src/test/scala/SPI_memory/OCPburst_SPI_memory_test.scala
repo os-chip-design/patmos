@@ -538,7 +538,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       val ran = new scala.util.Random(System.currentTimeMillis());
 
       for(x <- 0 to 10){
-        val my_data : Array[BigInt] = Array(ran.nextInt(), ran.nextInt(), ran.nextInt(), ran.nextInt());
+        val my_data : Array[BigInt] = Array(ran.nextInt(Integer.MAX_VALUE), ran.nextInt(Integer.MAX_VALUE), ran.nextInt(Integer.MAX_VALUE), ran.nextInt(Integer.MAX_VALUE));
         val my_address = ran.nextInt(0xFFFFFF);
 
         ocp_tester.write_command(my_address, my_data, Array(0xF, 0xF, 0xF, 0xF));
