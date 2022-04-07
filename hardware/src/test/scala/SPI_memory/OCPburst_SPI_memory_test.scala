@@ -85,14 +85,14 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
   def write_miso(b: Byte): Boolean = {
     var j = 0
-    var index = 7
+    //var index = 7
     
     if(funcs.falling_edge(S_CLK.peek().litToBoolean)) {
       val byte = b.asUInt
-      MISO.poke(byte(index))
-      index = index - 1
+      MISO.poke(byte(7 - bits_read))
+      //index = index - 1
     }
-    if(index == 0) {
+    if(bits_read == 7) {
       return true
     }
     
