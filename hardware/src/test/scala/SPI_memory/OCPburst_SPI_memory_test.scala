@@ -8,6 +8,7 @@ import ocp._
 import org.scalatest.flatspec.AnyFlatSpec
 import treadle.WriteVcdAnnotation
 import chisel3.experimental.chiselName
+
 import scala.collection.mutable.Map
 
 object STATE extends Enumeration {
@@ -130,6 +131,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       else{
         //println(Console.MAGENTA + "address: " + address + Console.RESET)
         if(!memory.contains(address)) {
+          println(Console.BLUE + "address: 0x" + address.toHexString + " not found, creating new entry..." + Console.RESET)
           memory.put(address, 0)
         }
 
@@ -150,6 +152,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       }
       else {
         memory.put(address, b.toByte);
+        println(Console.BLUE + "new data written to memory at address: 0x" + address.toHexString + ", data is: 0x" + b.toHexString + Console.RESET)
         address = address + 1;
       }
     }
@@ -193,8 +196,6 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
             handle_byte(in_val);
           }
         }
-
-        
 
         if(CE.peek().litValue() == 1){
           address = 0;
