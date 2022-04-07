@@ -550,6 +550,8 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
             println("passed read write test")
           }
           else{
+            println(Console.RED + "The read value was not the same as the written value. \n Written value: " + my_data(0) + ", " + my_data(1) + ", " + my_data(2) + ", " + my_data(3)
+              + " \nRead value was: " + read_data(0) + ", " + read_data(1) + ", " + read_data(2) + ", " + read_data(3) + Console.RESET);
             fail();
           }
         }
