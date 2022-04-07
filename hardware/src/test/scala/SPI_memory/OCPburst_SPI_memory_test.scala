@@ -88,15 +88,15 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
   def write_miso() = {
     if(funcs.falling_edge(S_CLK.peek().litToBoolean)) {
-      println("Falling edge")
+      //println("Falling edge")
       val byte = transmitData.U(8.W)
-      println(transmitData)
+      //println(transmitData)
       MISO.poke(byte(7 - bits_read))
     }
   }
 
   def handle_byte(b : Int): Unit = {
-
+    println(Console.MAGENTA + "handle_byte got" + b.toString)
     if (state == STATE.NULL || state == STATE.RESET_ENABLE){
       if(b == 0x66)
         state = STATE.RESET_ENABLE
@@ -122,7 +122,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       };
     }
     else if(state == STATE.READ){
-      //println(Console.MAGENTA + "read state" + Console.RESET)
+      println(Console.MAGENTA + "read state" + Console.RESET)
       if(address_bytes_read < 3){
         address = address << 8;
         address = address + b;
@@ -145,6 +145,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         println(Console.RED + "address is over 24 bits!?!?! " + Console.RESET)
     }
     else if(state == STATE.WRITE){
+      println(Console.MAGENTA + "In write state")
       if(address_bytes_read < 3){
         address = address << 8;
         address = address + b;
@@ -161,15 +162,14 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
   }
 
   def step (n : Int = 1) : Unit = {
-
     for( a <- 0 to n-1) {
 
       m.clock.step();
 
-      write_miso();
+      //write_miso();
 
       if(funcs.rising_edge(S_CLK.peek().litToBoolean)){
-
+        println(Console.MAGENTA + "Rising edge step")
         if(CE.peek().litValue() == 0 && m.reset.peek().litValue() == 0){
           CE.expect(false.B);
 
@@ -368,7 +368,8 @@ class OCP_master_commands(master : OcpBurstMasterSignals, slave : OcpBurstSlaveS
 
 class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 {
-/*  "SPI read test software" should "pass" in {
+ /* 
+  "SPI read test software" should "pass" in {
     test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
       val Software_Memory_Sim = new Software_Memory_Sim(dut,
