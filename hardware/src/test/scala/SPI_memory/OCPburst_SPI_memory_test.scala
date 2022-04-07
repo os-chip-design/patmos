@@ -52,7 +52,6 @@ class Memory_helper_functions {
   }
   def falling_edge(b: Boolean): Boolean = {
     val last = last_clock
-    last_clock = b;
 
     if(b == true)
       return false;
@@ -91,7 +90,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
     if(funcs.falling_edge(S_CLK.peek().litToBoolean) && write_enable) {
       val d : Boolean = ((transmitData >> bits_read) & 0x1) == 1;
       MISO.poke(d.B);
-    }
+    } 
   }
 
   def handle_byte(b : Int): Unit = {
