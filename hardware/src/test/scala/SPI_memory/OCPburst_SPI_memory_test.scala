@@ -130,7 +130,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
       if(funcs.rising_edge(S_CLK.peek().litToBoolean)){
 
-        if(S_CLK.peek().litValue() == 0 && m.reset.peek().litValue() == 0){
+        if(CE.peek().litValue() == 0 && m.reset.peek().litValue() == 0){
           CE.expect(false.B);
 
           if(CE.peek().litValue() == 1){
@@ -329,16 +329,16 @@ class OCP_master_commands(master : OcpBurstMasterSignals, slave : OcpBurstSlaveS
 class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 {
   "SPI read test software" should "pass" in {
-    test(new SPI(2, 0x0FF)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
-      val Software_Memory_Sim = new Software_Memory_Sim(dut, 
+      val Software_Memory_Sim = new Software_Memory_Sim(dut,
+                                                        dut.io.SPI_interface.CE,
                                                         dut.io.SPI_interface.MOSI, 
                                                         dut.io.SPI_interface.MISO,
-                                                        dut.io.SPI_interface.CE,
                                                         dut.io.SPI_interface.S_CLK, fail);
 
       dut.clock.setTimeout(11000);
-      Software_Memory_Sim.step(200);//wait for startup
+      Software_Memory_Sim.step(500);//wait for startup
       dut.io.SPI_interface.CE.expect(true.B)
 
       Software_Memory_Sim.step();
@@ -368,12 +368,12 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   }
 
   "SPI write test software" should "pass" in {
-    test(new SPI(2, 0x0FF)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
-    val Software_Memory_Sim = new Software_Memory_Sim(dut, 
+    val Software_Memory_Sim = new Software_Memory_Sim(dut,
+                                                      dut.io.SPI_interface.CE,
                                                       dut.io.SPI_interface.MOSI, 
                                                       dut.io.SPI_interface.MISO,
-                                                      dut.io.SPI_interface.CE,
                                                       dut.io.SPI_interface.S_CLK, fail);
 
       dut.clock.setTimeout(11000);
@@ -415,7 +415,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   }
 
   "Read OCP test software" should "pass" in {
-    test(new OCPburst_SPI_memory(2, 0x0FF)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new OCPburst_SPI_memory(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
       dut.clock.setTimeout(11000);
 
@@ -443,13 +443,18 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-/*
+
   "Write OCP test software" should "pass" in {
     test(new OCPburst_SPI_memory()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
-      dut.clock.setTimeout(10000);
+      dut.clock.setTimeout(20000);
 
-      val Software_Memory_Sim = new Software_Memory_Sim(dut, fail);
+      val Software_Memory_Sim = new Software_Memory_Sim(dut,
+        dut.io.CE,
+        dut.io.MOSI,
+        dut.io.MISO,
+        dut.io.S_CLK,
+        fail);
 
       val master = dut.io.OCP_interface.M
       val slave = dut.io.OCP_interface.S
@@ -470,7 +475,6 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-*/
 
 }
 

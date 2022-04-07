@@ -106,7 +106,7 @@ class SPI(count_s_clock: Int, startup_count_to : Int = 0x3FFF) extends Module {
   NextState := false.B
   NextStateInv := false.B
 
-  ClockEn := true.B
+  ClockEn := false.B
   ClockReset := false.B
 
   RisingEdge := false.B
