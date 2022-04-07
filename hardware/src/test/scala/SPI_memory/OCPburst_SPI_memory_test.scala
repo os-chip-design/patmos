@@ -8,6 +8,7 @@ import ocp._
 import org.scalatest.flatspec.AnyFlatSpec
 import treadle.WriteVcdAnnotation
 import chisel3.experimental.chiselName
+import scala.collection.mutable.Map
 
 object STATE extends Enumeration {
   type STATE = Value
@@ -80,19 +81,22 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
   var data_bytes_read = 0;
   var bytes_recived_string = "";
 
-  def write_miso(b: Byte): Unit = {
+  var memory : scala.collection.mutable.Map[Int, Byte] = Map[Int, Byte]()
+
+  def write_miso(b: Byte): Boolean = {
     var j = 0
     var index = 7
-    for(j <- 0 until 7) {
-      if(funcs.falling_edge(S_CLK.peek().litToBoolean)) {
-        val byte = b.asUInt
-        MISO.poke(byte(index))
-        index = index - 1
-      }
-      if(index == 0) {
-        return
-      }
+    
+    if(funcs.falling_edge(S_CLK.peek().litToBoolean)) {
+      val byte = b.asUInt
+      MISO.poke(byte(index))
+      index = index - 1
     }
+    if(index == 0) {
+      return true
+    }
+    
+    return false
   }
 
 
@@ -128,7 +132,6 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
     }
     else if(state == STATE.READ){
       //println(Console.MAGENTA + "read state" + Console.RESET)
-
       if(address_bytes_read < 3){
         address = address << 8;
         address = address + b;
@@ -137,15 +140,31 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       }
       else{
         //println(Console.MAGENTA + "address: " + address + Console.RESET)
-        set_output(0); //TODO real output
-        data_bytes_read += 1;
+        if(!memory.contains(address)) {
+          memory.put(address, 0)
+        }
+
+        if(write_miso(memory(address))) {
+          address = address + 1
+        }
+
+        data_bytes_read += 1;     
       }
 
       if(address > scala.math.pow(2,8*address_bytes_read))
         println(Console.RED + "address is over 24 bits!?!?! " + Console.RESET)
     }
     else if(state == STATE.WRITE){
-
+      if(address_bytes_read < 3){
+        address = address << 8;
+        address = address + b;
+        println(Console.MAGENTA + "address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
+        address_bytes_read += 1;
+      }
+      else {
+        memory.put(address, b.toByte);
+        address = address + 1
+      }
     }
 
   }
