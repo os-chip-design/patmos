@@ -460,7 +460,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       val slave = dut.io.OCP_interface.S
 
       val ocp_tester = new OCP_master_commands(master, slave, Software_Memory_Sim.step, fail);
-      Software_Memory_Sim.step(1000);
+      Software_Memory_Sim.step(500);
 
       ocp_tester.write_command(141, Array(14, 1245, 114, 124), Array(0xF, 0xF, 0xF, 0xF));
       ocp_tester.write_command(115161, Array(43451, 1355, 12355, 12512), Array(0xF, 0x0, 0x0, 0xF));
@@ -472,9 +472,41 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   "Write read test software" should "pass" in {
     test(new OCPburst_SPI_memory()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
+      dut.clock.setTimeout(200000);
 
+      val Software_Memory_Sim = new Software_Memory_Sim(dut,
+        dut.io.CE,
+        dut.io.MOSI,
+        dut.io.MISO,
+        dut.io.S_CLK,
+        fail);
+
+      val master = dut.io.OCP_interface.M
+      val slave = dut.io.OCP_interface.S
+
+      val ocp_tester = new OCP_master_commands(master, slave, Software_Memory_Sim.step, fail);
+      Software_Memory_Sim.step(500);
+
+      val ran = new scala.util.Random(System.currentTimeMillis());
+
+      for(x <- 0 to 10){
+        val my_data : Array[BigInt] = Array(ran.nextInt(), ran.nextInt(), ran.nextInt(), ran.nextInt());
+        val my_address = ran.nextInt(0xFFFFFF);
+
+        ocp_tester.write_command(my_address, my_data, Array(0xF, 0xF, 0xF, 0xF));
+
+        val read_data = ocp_tester.read_command(my_address);
+
+        for(x <- 0 to read_data.length){
+          if(my_data == read_data) {
+            println("passed read write test")
+          }
+          else{
+            fail();
+          }
+        }
+      }
     }
   }
-
 }
 
