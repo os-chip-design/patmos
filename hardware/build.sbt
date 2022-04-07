@@ -3,6 +3,7 @@ name := "Patmos"
 
 scalaVersion := "2.12.12"
 
+scalacOptions := Seq("-unchecked", "-deprecation")
 scalacOptions ++= Seq("-Xsource:2.11", "-unchecked", "-deprecation", "-feature", "-language:reflectiveCalls")
 
 libraryDependencies += scalaVersion("org.scala-lang" % "scala-compiler" % _).value

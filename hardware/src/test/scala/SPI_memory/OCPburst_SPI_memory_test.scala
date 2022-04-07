@@ -85,10 +85,10 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
   var memory : scala.collection.mutable.Map[Int, Byte] = Map[Int, Byte]()
 
   var transmitData = 0
+  var write_enable = false;
 
   def write_miso() = {
-    if(funcs.falling_edge(S_CLK.peek().litToBoolean)) {
-      println("Falling edge")
+    if(funcs.falling_edge(S_CLK.peek().litToBoolean) && write_enable) {
       val byte = transmitData.asUInt
       MISO.poke(byte(7 - bits_read))
     }
@@ -96,6 +96,8 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
   def handle_byte(b : Int): Unit = {
 
+
+    write_enable = true;
     if (state == STATE.NULL || state == STATE.RESET_ENABLE){
       if(b == 0x66)
         state = STATE.RESET_ENABLE
@@ -144,6 +146,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         println(Console.RED + "address is over 24 bits!?!?! " + Console.RESET)
     }
     else if(state == STATE.WRITE){
+      write_enable = true;
       if(address_bytes_read < 3){
         address = address << 8;
         address = address + b;
@@ -164,21 +167,20 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
     for( a <- 0 to n-1) {
 
       m.clock.step();
-
       write_miso();
 
       if(funcs.rising_edge(S_CLK.peek().litToBoolean)){
 
+        if(CE.peek().litValue() == 1){
+          if(bits_read != 0){
+            println(Console.RED + "#CE must be hold high for the entire operation, minimum 8 bits at a time, was was pulled high "
+              + (bits_read + 1) + " bits in" + Console.RESET);
+            fail_callback()
+          }
+        }
+
         if(CE.peek().litValue() == 0 && m.reset.peek().litValue() == 0){
           CE.expect(false.B);
-
-          if(CE.peek().litValue() == 1){
-            if(bits_read != 0){
-              println(Console.RED + "#CE must be hold high for the entire operation, minimum 8 bits at a time, was was pulled high "
-                + (bits_read + 1) + " bits in" + Console.RESET);
-              fail_callback()
-            }
-          }
 
           //We are ready to recive data
           val MOSI_val : Boolean = MOSI.peek().litToBoolean;
@@ -204,6 +206,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         }
       }
     }
+
   };
 
 }
@@ -367,8 +370,12 @@ class OCP_master_commands(master : OcpBurstMasterSignals, slave : OcpBurstSlaveS
 
 class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 {
+  println(Console.GREEN + "testing" + Console.RESET)
+
   "SPI read test software" should "pass" in {
     test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+
+      println(Console.GREEN + "testing SPI read test software" + Console.RESET)
 
       val Software_Memory_Sim = new Software_Memory_Sim(dut,
                                                         dut.io.SPI_interface.CE,
@@ -405,9 +412,12 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-/*
+
+
   "SPI write test software" should "pass" in {
     test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+
+    println(Console.GREEN + "SPI write test software" + Console.RESET)
 
     val Software_Memory_Sim = new Software_Memory_Sim(dut,
                                                       dut.io.SPI_interface.CE,
@@ -456,6 +466,8 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   "Read OCP test software" should "pass" in {
     test(new OCPburst_SPI_memory(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
+      println(Console.GREEN + "Read OCP test software" + Console.RESET)
+
       dut.clock.setTimeout(11000);
 
       val Software_Memory_Sim = new Software_Memory_Sim(dut, 
@@ -486,6 +498,8 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   "Write OCP test software" should "pass" in {
     test(new OCPburst_SPI_memory()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
+      println(Console.GREEN + "Write OCP test software" + Console.RESET)
+
       dut.clock.setTimeout(20000);
 
       val Software_Memory_Sim = new Software_Memory_Sim(dut,
@@ -507,9 +521,11 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-*/
+
   "Write read test software" should "pass" in {
     test(new OCPburst_SPI_memory()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+
+      println(Console.GREEN + "Write read test software" + Console.RESET)
 
       dut.clock.setTimeout(200000);
 
