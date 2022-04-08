@@ -39,6 +39,7 @@ class Memory_helper_functions {
 
     return amount;
   }
+
   def rising_edge(b : Boolean): Boolean ={
 
     val last = last_clock
@@ -53,6 +54,7 @@ class Memory_helper_functions {
         return true
     }
   }
+
   def falling_edge(b: Boolean): Boolean = {
     val last = last_clock_2
     last_clock_2 = b
@@ -391,6 +393,7 @@ class OCP_master_commands(master : OcpBurstMasterSignals, slave : OcpBurstSlaveS
     slave.DataAccept.expect(false.B)
 
   }
+
 }
 
 class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
@@ -401,7 +404,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     for(i <- 0 to expected.length){
       if(mem_sim.memory(start_address + i) != expected(i)){
-        println(Console.RED + "failed, expected memory " + (start_address + i) + " was " + expected(i) + ", but should have been was: " + mem_sim.memory(start_address + i));
+        println(Console.RED + "failed, expected memory " + (start_address + i) + " was " + expected(i) + ", but should have been : " + mem_sim.memory(start_address + i));
         fail();
       }
     }
@@ -610,5 +613,6 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       }
     }
   }
+
 }
 
