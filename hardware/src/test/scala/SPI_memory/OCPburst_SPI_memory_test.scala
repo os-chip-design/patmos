@@ -9,6 +9,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import treadle.WriteVcdAnnotation
 import chisel3.experimental.chiselName
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 import scala.math._
 import scala.collection.mutable.Map
@@ -18,6 +20,7 @@ object STATE extends Enumeration {
   val NULL, RESET_ENABLE, RESET, READ, WRITE = Value
 
 }
+
 
 class Memory_helper_functions {
 
@@ -136,23 +139,23 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
     }
     else if(state == STATE.READ){
       write_enable = true;
-      println(Console.MAGENTA + "In read state")
-      println(Console.MAGENTA + "read state" + Console.RESET)
+      //println(Console.MAGENTA + "In read state")
+      //println(Console.MAGENTA + "read state" + Console.RESET)
       if(address_bytes_read < 3){
         address = address << 8;
         address = address + b;
-        println(Console.MAGENTA + "Read address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
+        //println(Console.MAGENTA + "Read address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
         address_bytes_read += 1;
       }
       else{
         //println(Console.MAGENTA + "address: " + address + Console.RESET)
         if(!memory.contains(address)) {
-          println(Console.BLUE + "address: 0x" + address.toHexString + " not found, creating new entry..." + Console.RESET)
+          //println(Console.BLUE + "address: 0x" + address.toHexString + " not found, creating new entry..." + Console.RESET)
           memory(address) = 0;
         }
 
         transmitData = memory(address)
-        println(Console.MAGENTA + "transmit data is = " + transmitData)
+        //println(Console.MAGENTA + "transmit data is = " + transmitData)
         address += 1
         data_bytes_read += 1;     
       }
@@ -165,12 +168,12 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       if(address_bytes_read < 3){
         address = address << 8;
         address = address + b;
-        println(Console.MAGENTA + "Write address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
+        //println(Console.MAGENTA + "Write address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
         address_bytes_read += 1;
       }
       else {
         memory(address) = b.toByte;
-        println(Console.BLUE + "new data written to memory at address: 0x" + address.toHexString + ", data is: 0x" + b.toHexString + Console.RESET)
+        //println(Console.BLUE + "new data written to memory at address: 0x" + address.toHexString + ", data is: 0x" + b.toHexString + Console.RESET)
         address = address + 1;
       }
     }
@@ -220,7 +223,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
           if(bits_read >= 8){
             bits_read = 0;
             val in_val = funcs.bitsToInt(in_bits);
-            println(Console.BLUE + "in_val was: 0x" + in_val.toHexString + Console.RESET)
+            //println(Console.BLUE + "in_val was: 0x" + in_val.toHexString + Console.RESET)
             bytes_recived_string += in_val.toHexString + "_"
             handle_byte(in_val);
           }
@@ -401,15 +404,27 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   println(Console.GREEN + "testing" + Console.RESET)
 
   def test_memory(mem_sim : Software_Memory_Sim, start_address : Int, expected : Array[BigInt], fail: () => Unit): Unit ={
+    var failed = false;
+    for(i <- 0 to expected.length - 1){
 
-    for(i <- 0 to expected.length){
-      if(mem_sim.memory(start_address + i) != expected(i)){
-        println(Console.RED + "failed, expected memory " + (start_address + i) + " was " + expected(i) + ", but should have been : " + mem_sim.memory(start_address + i));
-        fail();
+      for(x <- 0 to 3){
+        val address = start_address + i * 4 + x;
+        val sub_expected : Byte = ((expected(i) >> (8*(3-x))) & 0xFF).toByte //TODO should we convert the indian here?
+        val data : Byte = mem_sim.memory(address);
+        if(data != sub_expected){
+          println(Console.RED + "failed, expected memory 0x" + (address).toHexString + " was 0x" + data.toHexString + ", but should have been : 0x" + sub_expected.toHexString);
+          failed = true;
+        }
       }
     }
+
+    if(failed)
+      fail();
+    else{
+      println(Console.GREEN + "passed memory test" + Console.RESET)
+    }
   }
-/*
+
   "SPI read test software" should "pass" in {
     test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
@@ -469,10 +484,10 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       software_memory_sim.step();
       dut.io.Address.poke(0x0F0F0F.U);
       dut.io.WriteEnable.poke(true.B);
-      dut.io.WriteData(0).poke(0xC0C.U);
-      dut.io.WriteData(1).poke(0xC0C.U);
-      dut.io.WriteData(2).poke(0xC0C.U);
-      dut.io.WriteData(3).poke(0xC0C.U);
+      dut.io.WriteData(0).poke(0x0C0C.U);
+      dut.io.WriteData(1).poke(0x0C0C.U);
+      dut.io.WriteData(2).poke(0x0C0C.U);
+      dut.io.WriteData(3).poke(0x0C0C.U);
       dut.io.ByteEnable.poke(0xFFFF.U);
       software_memory_sim.step();
       dut.io.WriteEnable.poke(false.B);
@@ -484,12 +499,12 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       software_memory_sim.step(100);
 
       software_memory_sim.step();
-      dut.io.Address.poke(0x0F0F0F.U);
+      dut.io.Address.poke(0x0000AC.U);
       dut.io.WriteEnable.poke(true.B);
-      dut.io.WriteData(0).poke(0xC0C.U);
-      dut.io.WriteData(1).poke(0xC0C.U);
-      dut.io.WriteData(2).poke(0xC0C.U);
-      dut.io.WriteData(3).poke(0xC0C.U);
+      dut.io.WriteData(0).poke(0x1.U);
+      dut.io.WriteData(1).poke(0xAA.U);
+      dut.io.WriteData(2).poke(0xB1.U);
+      dut.io.WriteData(3).poke(0x41.U);
       software_memory_sim.step();
       dut.io.WriteEnable.poke(false.B);
 
@@ -498,7 +513,55 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       }
 
 
-      test_memory(software_memory_sim, 0x0F0F0F, Array(0xC0C0,0xC0C,0xC0C,0xC0C), fail);
+      test_memory(software_memory_sim, 0x0000AC, Array(0x1,0xAA,0xB1,0x41), fail);
+      test_memory(software_memory_sim, 0x0F0F0F, Array(0xC0C,0xC0C,0xC0C,0xC0C), fail);
+
+    }
+  }
+
+  "SPI write read test software" should "pass" in {
+    test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+
+      println(Console.GREEN + "SPI write read test software" + Console.RESET)
+
+      val software_memory_sim = new Software_Memory_Sim(dut,
+        dut.io.SPI_interface.CE,
+        dut.io.SPI_interface.MOSI,
+        dut.io.SPI_interface.MISO,
+        dut.io.SPI_interface.S_CLK, fail);
+
+      dut.clock.setTimeout(11000);
+      software_memory_sim.step(200);//wait for startup
+      dut.io.SPI_interface.CE.expect(true.B)
+
+      software_memory_sim.step();
+      dut.io.Address.poke(0x0F0F0F.U);
+      dut.io.WriteEnable.poke(true.B);
+      dut.io.WriteData(0).poke(0xAABBCCDD.U);
+      dut.io.WriteData(1).poke(0x12345678.U);
+      dut.io.WriteData(2).poke(0xFF00AD2A.U);
+      dut.io.WriteData(3).poke(0xADFA1234.U);
+      dut.io.ByteEnable.poke(0xFFFF.U);
+      software_memory_sim.step();
+      dut.io.WriteEnable.poke(false.B);
+
+      while(dut.io.WriteCompleted.peek().litToBoolean == false){
+        software_memory_sim.step();
+      }
+
+      dut.io.Address.poke(0x0F0F0F.U);
+      dut.io.ReadEnable.poke(true.B);
+      software_memory_sim.step();
+      dut.io.ReadEnable.poke(false.B);
+
+      while(dut.io.DataValid.peek().litToBoolean == false){
+        software_memory_sim.step();
+      }
+
+      dut.io.ReadData(0).expect(0xAABBCCDD.U);
+      dut.io.ReadData(1).expect(0x12345678.U);
+      dut.io.ReadData(2).expect(0xFF00AD2A.U);
+      dut.io.ReadData(3).expect(0xADFA1234.U);
 
     }
   }
@@ -522,7 +585,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       val slave = dut.io.OCP_interface.S
 
       val ocp_tester = new OCP_master_commands(master, slave, software_memory_sim.step, fail);
-      software_memory_sim.step(1000);
+      software_memory_sim.step(5000);
 
       ocp_tester.read_command(0x0000FF);
       software_memory_sim.step(10);
@@ -536,9 +599,9 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-*/
+
   "Write OCP test software" should "pass" in {
-    test(new OCPburst_SPI_memory()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new OCPburst_SPI_memory(2,0x000F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
       println(Console.GREEN + "Write OCP test software" + Console.RESET)
 
@@ -568,9 +631,9 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
 
     }
   }
-/*
+
   "Write read test software" should "pass" in {
-    test(new OCPburst_SPI_memory()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new OCPburst_SPI_memory(2, 0x000F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
       println(Console.GREEN + "Write read test software" + Console.RESET)
 
@@ -613,6 +676,6 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
         }
       }
     }
-  }*/
+  }
 }
 
