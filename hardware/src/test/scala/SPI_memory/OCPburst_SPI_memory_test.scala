@@ -240,19 +240,22 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       val ocp_tester = new OCP_master_commands(master, slave, software_memory_sim.step, fail);
       software_memory_sim.step(500);
 
+      ocp_tester.write_command(0x00, Array(0x01, 0x02, 0x03, 0x04), Array(0xF, 0xF, 0xF, 0xF));
+      test_memory(software_memory_sim, 0x00, Array(0x01, 0x02, 0x03, 0x04), fail);
+
       //ocp_tester.write_command(141, Array(14, 1245, 114, 124), Array(0xF, 0xF, 0xF, 0xF));
+      //test_memory(software_memory_sim, 141, Array(14, 1245, 114, 124), fail);
+
       //ocp_tester.write_command(115161, Array(43451, 1355, 12355, 12512), Array(0xF, 0x0, 0x0, 0xF));
+      //test_memory(software_memory_sim, 115161, Array(43451, 0, 0, 12512), fail);
+
       //ocp_tester.write_command(0, Array(1, 2, 3, 4), Array(0x0, 0xF, 0xF, 0x0));
-      ocp_tester.write_command(0x0F0F0F0F, Array(0xAA, 0xAA, 0xAA, 0xAA), Array(0xF, 0xF, 0xF, 0xF));
-
-      test_memory(software_memory_sim, 141, Array(14, 1245, 114, 124), fail);
-      test_memory(software_memory_sim, 115161, Array(43451, 0, 0, 12512), fail);
-      test_memory(software_memory_sim, 0, Array(0, 2, 3, 0), fail);
-
+      //test_memory(software_memory_sim, 0, Array(0, 2, 3, 0), fail); */
+    
     }
   }
 
-  "Write read test software" should "pass" in {
+  /*"Write read test software" should "pass" in {
     test(new OCPburst_SPI_memory(2, 0x000F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
       println(Console.GREEN + "Write read test software" + Console.RESET)
@@ -299,7 +302,6 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   }
 
   //TODO byte enable tests
-
-
+  }*/
 }
 
