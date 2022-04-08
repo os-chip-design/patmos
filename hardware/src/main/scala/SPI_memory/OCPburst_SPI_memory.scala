@@ -108,7 +108,7 @@ class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FF
     }
     is(sampleData) {
       address := address;
-      when(CntReg === 0.U){
+      when(CntReg === 1.U){
         io.OCP_interface.S.CmdAccept := true.B
       }.otherwise{
         io.OCP_interface.S.CmdAccept := false.B

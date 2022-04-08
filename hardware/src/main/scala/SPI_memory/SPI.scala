@@ -374,7 +374,7 @@ class SPI(count_s_clock: Int, startup_count_to : Int = 0x3FFF) extends Module {
 
           CntReg := CntReg;
 
-          io.SPI_interface.MOSI := io.WriteData((PosReg >> 2).asUInt)(31.U - Cat(PosReg(1,0),CntReg(2,0)).asUInt)
+          io.SPI_interface.MOSI := io.WriteData(  (PosReg >> 2).asUInt)(31.U - Cat(PosReg(1,0),CntReg(2,0)).asUInt   )
           SubStateReg := transmitData
 
           when(NextStateInv){
