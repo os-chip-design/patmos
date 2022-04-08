@@ -43,7 +43,6 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
     }
   }
 
-  
 /*
   "SPI read test software" should "pass" in {
     test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
@@ -298,6 +297,8 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       }
     }
   }
+
+  //TODO byte enable tests
 
 
 }
