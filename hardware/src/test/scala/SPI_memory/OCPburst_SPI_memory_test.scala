@@ -30,7 +30,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
         val sub_expected : Byte = ((expected(i) >> (8*(3-x))) & 0xFF).toByte //TODO should we convert the indian here?
         val data : Byte = mem_sim.memory(address);
         if(data != sub_expected){
-          println(Console.RED + "failed, expected memory 0x" + (address).toHexString + " was 0x" + data.toHexString + ", but should have been : 0x" + sub_expected.toHexString);
+          println(Console.RED + "failed, expected memory 0x" + (address).toHexString + " was 0x" + (0x000000FF & data).toHexString + ", but should have been : 0x" + (0x000000FF & sub_expected).toHexString);
           failed = true;
         }
       }
