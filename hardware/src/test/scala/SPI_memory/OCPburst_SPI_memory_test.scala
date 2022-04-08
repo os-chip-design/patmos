@@ -127,7 +127,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       if(address_bytes_read < 3){
         address = address << 8;
         address = address + b;
-        println(Console.MAGENTA + "address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
+        println(Console.MAGENTA + "Read address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
         address_bytes_read += 1;
       }
       else{
@@ -150,7 +150,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       if(address_bytes_read < 3){
         address = address << 8;
         address = address + b;
-        println(Console.MAGENTA + "address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
+        println(Console.MAGENTA + "Write address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
         address_bytes_read += 1;
       }
       else {
