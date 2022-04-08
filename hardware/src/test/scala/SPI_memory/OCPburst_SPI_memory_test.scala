@@ -20,6 +20,7 @@ object STATE extends Enumeration {
 class Memory_helper_functions {
 
   var last_clock = false
+  var last_clock_2 = false
 
   def bitsToInt(bits : Array[Boolean]) : Int = {
     var amount : Int = 0;
@@ -51,7 +52,8 @@ class Memory_helper_functions {
     }
   }
   def falling_edge(b: Boolean): Boolean = {
-    val last = last_clock
+    val last = last_clock_2
+    last_clock_2 = b
 
     if(b == true)
       return false;
@@ -120,6 +122,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       };
     }
     else if(state == STATE.READ){
+      println(Console.MAGENTA + "In read state")
       println(Console.MAGENTA + "read state" + Console.RESET)
       if(address_bytes_read < 3){
         address = address << 8;
@@ -143,7 +146,6 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         println(Console.RED + "address is over 24 bits!?!?! " + Console.RESET)
     }
     else if(state == STATE.WRITE){
-      println(Console.MAGENTA + "In write state")
       write_enable = true;
       if(address_bytes_read < 3){
         address = address << 8;
