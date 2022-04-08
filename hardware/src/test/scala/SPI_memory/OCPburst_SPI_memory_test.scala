@@ -94,7 +94,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
   }
 
   def handle_byte(b : Int): Unit = {
-    write_enable = true;
+    write_enable = false;
     if (state == STATE.NULL || state == STATE.RESET_ENABLE){
       if(b == 0x66)
         state = STATE.RESET_ENABLE
@@ -536,7 +536,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       val slave = dut.io.OCP_interface.S
 
       val ocp_tester = new OCP_master_commands(master, slave, Software_Memory_Sim.step, fail);
-      Software_Memory_Sim.step(500);
+      Software_Memory_Sim.step(200);
 
       val ran = new scala.util.Random(System.currentTimeMillis());
 
@@ -545,6 +545,8 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
         val my_address = ran.nextInt(0xFFFFFF);
 
         ocp_tester.write_command(my_address, my_data, Array(0xF, 0xF, 0xF, 0xF));
+
+        Software_Memory_Sim.step(100);
 
         val read_data = ocp_tester.read_command(my_address);
 
