@@ -8,6 +8,7 @@ import ocp._
 import org.scalatest.flatspec.AnyFlatSpec
 import treadle.WriteVcdAnnotation
 import chisel3.experimental.chiselName
+import scala.math._
 
 import scala.collection.mutable.Map
 
@@ -83,21 +84,29 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
   var data_bytes_read = 0;
   var bytes_recived_string = "";
 
-  var memory : scala.collection.mutable.Map[Int, Byte] = Map[Int, Byte]()
+  val SIZE : Int = pow(2.0, 24.0).toInt;
+  var memory = new Array[Byte](SIZE)
 
   var transmitData = 0
   var write_enable = false;
 
   def write_miso() = {
-    if(funcs.falling_edge(S_CLK.peek().litToBoolean) && write_enable) {
+    if(funcs.falling_edge(S_CLK.peek().litToBoolean) && CE.peek().litToBoolean == false) {
       val d : Boolean = ((transmitData >> bits_read) & 0x1) == 1;
       MISO.poke(d.B);
+      //val byte = transmitData.asUInt
+      //val bit = byte(0.U)
+
+      //println(Console.MAGENTA + "bit in write_miso was = " + d.toString)
+      //println(Console.YELLOW + "transmitData in write_miso was = " + transmitData.toString)
+      //println(Console.BLUE + "bits_read in write_miso was = " + bits_read.toString)
     } 
   }
 
   def handle_byte(b : Int): Unit = {
-    write_enable = true;
+    write_enable = false;
     if (state == STATE.NULL || state == STATE.RESET_ENABLE){
+      transmitData = 0
       if(b == 0x66)
         state = STATE.RESET_ENABLE
       else if(b == 0x99)
@@ -108,6 +117,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       };
     }
     else if(state == STATE.RESET){
+      transmitData = 0
       if(b == 0x03) //read state
         state = STATE.READ
       else if(b == 0x02) //write state
@@ -122,6 +132,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       };
     }
     else if(state == STATE.READ){
+      write_enable = true;
       println(Console.MAGENTA + "In read state")
       println(Console.MAGENTA + "read state" + Console.RESET)
       if(address_bytes_read < 3){
@@ -134,10 +145,11 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         //println(Console.MAGENTA + "address: " + address + Console.RESET)
         if(!memory.contains(address)) {
           println(Console.BLUE + "address: 0x" + address.toHexString + " not found, creating new entry..." + Console.RESET)
-          memory.put(address, 0)
+          memory(address) = 0;
         }
 
         transmitData = memory(address)
+        println(Console.MAGENTA + "transmit data is = " + transmitData)
         address += 1
         data_bytes_read += 1;     
       }
@@ -146,7 +158,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         println(Console.RED + "address is over 24 bits!?!?! " + Console.RESET)
     }
     else if(state == STATE.WRITE){
-      write_enable = true;
+      transmitData = 0
       if(address_bytes_read < 3){
         address = address << 8;
         address = address + b;
@@ -154,7 +166,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         address_bytes_read += 1;
       }
       else {
-        memory.put(address, b.toByte);
+        memory(address) = b.toByte;
         println(Console.BLUE + "new data written to memory at address: 0x" + address.toHexString + ", data is: 0x" + b.toHexString + Console.RESET)
         address = address + 1;
       }
@@ -167,6 +179,19 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
       m.clock.step();
       write_miso();
+      
+      if(CE.peek().litValue() == 1){
+          if (state == STATE.NULL || state == STATE.RESET_ENABLE){
+
+          }
+          else{
+              state = STATE.RESET;
+              address_bytes_read = 0;
+              data_bytes_read = 0;
+              address = 0;
+              println(Console.YELLOW + "RESET" + Console.RESET);
+          }
+      }
 
       if(funcs.rising_edge(S_CLK.peek().litToBoolean)){
 
