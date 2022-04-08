@@ -1,0 +1,47 @@
+<patmos>
+  <description>configuration for patmos caravel project</description>
+
+  <frequency Hz="50000000"/>
+  <pipeline dual="false" />
+  <cores count="1" />
+  <CmpDevs>
+    <CmpDev name="Hardlock" />
+    <CmpDev name="UartCmp">
+      <!-- Not implemented yet --> 
+       <!--<params> 
+        <param name="baudRate" value="115200"/>
+        <param name="fifoDepth" value="16"/>
+      </params> -->
+    </CmpDev>
+  </CmpDevs>
+  <bus burstLength="4" writeCombine="false" mmu="false" roundRobinArbiter="false" />
+
+  <ICache type="method" size="0k" assoc="1" repl="fifo" />
+  <DCache size="0k" assoc="1" repl="" writeThrough="true" />
+  <SCache size="0k" />
+  <ISPM size="0k" />
+  <DSPM size="0k" />
+
+  <ExtMem size="1k" DevTypeRef="OCRam" />
+
+  <IOs>
+    <IO DevTypeRef="Timer" offset="2" intrs="0,1" allcores="true" />
+    <IO DevTypeRef="Deadline" offset="3" allcores="true" />
+    <IO DevTypeRef="Leds" offset="9"/>
+  </IOs>
+
+  <Devs>
+    <Dev DevType="Timer" entity="Timer" iface="OcpCore" />
+    <Dev DevType="Deadline" entity="Deadline" iface="OcpCore"/>
+    <Dev DevType="Leds" entity="Leds" iface="OcpCore">
+      <params>
+        <param name="ledCount" value="8"/>
+      </params>
+    </Dev>
+    <Dev DevType="OCRam" entity="OCRamCtrl" iface="OcpBurst">
+      <params>
+         <param name="sramAddrWidth" value="10" />
+      </params>
+    </Dev>
+  </Devs>
+</patmos>
