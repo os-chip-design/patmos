@@ -85,7 +85,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
   }
 
   "SPI write test software" should "pass" in {
-    test(new SPI(4, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new SPI(2, 0x00F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
     println(Console.GREEN + "SPI write test  test software" + Console.RESET)
 
@@ -149,17 +149,17 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
         dut.io.SPI_interface.MISO,
         dut.io.SPI_interface.S_CLK, fail);
 
-      dut.clock.setTimeout(100000);
+      dut.clock.setTimeout(10000);
       software_memory_sim.step(200);//wait for startup
       dut.io.SPI_interface.CE.expect(true.B)
 
       software_memory_sim.step();
       dut.io.Address.poke(0x0F0F0F.U);
       dut.io.WriteEnable.poke(true.B);
-      dut.io.WriteData(0).poke(0x1ABBCCDD.U);
+      dut.io.WriteData(0).poke(0x7ABBCCDD.U);
       dut.io.WriteData(1).poke(0x12345678.U);
-      dut.io.WriteData(2).poke(0x1F00AD2A.U);
-      dut.io.WriteData(3).poke(0x1DFA1234.U);
+      dut.io.WriteData(2).poke(0x7F00AD2A.U);
+      dut.io.WriteData(3).poke(0x7DFA1234.U);
       dut.io.ByteEnable.poke(0xFFFF.U);
       software_memory_sim.step();
       dut.io.WriteEnable.poke(false.B);
@@ -177,10 +177,10 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
         software_memory_sim.step();
       }
 
-      dut.io.ReadData(0).expect(0xCABBCCDD.U);
+      dut.io.ReadData(0).expect(0x7ABBCCDD.U);
       dut.io.ReadData(1).expect(0x12345678.U);
-      dut.io.ReadData(2).expect(0xCF00AD2A.U);
-      dut.io.ReadData(3).expect(0xCDFA1234.U);
+      dut.io.ReadData(2).expect(0x7F00AD2A.U);
+      dut.io.ReadData(3).expect(0x7DFA1234.U);
 
     }
   }

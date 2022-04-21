@@ -57,7 +57,8 @@ class SPI(count_s_clock: Int, startup_count_to : Int = 0x3FFF) extends Module {
   io.ReadData(2) := DataReg(63,32)
   io.ReadData(3) := DataReg(31,0)
 
-  io.WriteCompleted := false.B
+  val WriteCompleted_reg = RegInit(false.B)
+  io.WriteCompleted := WriteCompleted_reg;
 
   val boot :: resetEnable :: resetWait :: setReset :: idle :: read :: write :: Nil = Enum(7)
   val StateReg = RegInit(boot)
@@ -212,6 +213,7 @@ class SPI(count_s_clock: Int, startup_count_to : Int = 0x3FFF) extends Module {
       // Waits for command from main
       StateReg := idle
       io.SPI_interface.CE := true.B
+      WriteCompleted_reg := false.B;
 
       when(io.ReadEnable) {
         StateReg := read
@@ -294,7 +296,7 @@ class SPI(count_s_clock: Int, startup_count_to : Int = 0x3FFF) extends Module {
         is(computeAddress) {
           when(PosReg === 15.U){
             PosReg := 0.U
-            io.WriteCompleted := true.B
+            WriteCompleted_reg := true.B
             StateReg := idle
             io.SPI_interface.CE := true.B
           }
@@ -318,7 +320,7 @@ class SPI(count_s_clock: Int, startup_count_to : Int = 0x3FFF) extends Module {
 
           when(!Carry(15).asBool){
             PosReg := 0.U
-            io.WriteCompleted := true.B
+            WriteCompleted_reg := true.B
             StateReg := idle
             io.SPI_interface.CE := true.B
           }
@@ -396,7 +398,7 @@ class SPI(count_s_clock: Int, startup_count_to : Int = 0x3FFF) extends Module {
           when((CntReg + (PosReg << 3).asUInt) === 127.U && NextStateInv) {
             CntReg := 0.U
             PosReg := 0.U
-            io.WriteCompleted := true.B
+            WriteCompleted_reg := true.B
             StateReg := idle
             io.SPI_interface.CE := true.B
           }

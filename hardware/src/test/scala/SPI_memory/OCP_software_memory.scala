@@ -94,9 +94,11 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       //val byte = transmitData.asUInt
       //val bit = byte(0.U)
 
-      //println(Console.MAGENTA + "bit in write_miso was = " + d.toString)
-      //println(Console.YELLOW + "transmitData in write_miso was = " + transmitData.toString)
-      //println(Console.BLUE + "bits_read in write_miso was = " + bits_read.toString)
+      if(transmitData != 0 && false){ //remove false to debug
+        println(Console.MAGENTA + "bit in write_miso was = " + d.toString + Console.RESET)
+        println(Console.YELLOW + "transmitData in write_miso was = " + transmitData.toString + Console.RESET)
+        println(Console.BLUE + "bits_read in write_miso was = " + bits_read.toString + Console.RESET)
+      }
     }
   }
 
@@ -140,13 +142,8 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
       }
       else{
         //println(Console.MAGENTA + "address: " + address + Console.RESET)
-        if(!memory.contains(address)) {
-          //println(Console.BLUE + "address: 0x" + address.toHexString + " not found, creating new entry..." + Console.RESET)
-          memory(address) = 0;
-        }
-
         transmitData = memory(address)
-        //println(Console.MAGENTA + "transmit data is = " + transmitData)
+        //println(Console.MAGENTA + "transmit data is = " + transmitData + Console.RESET)
         address += 1
         data_bytes_read += 1;
       }
