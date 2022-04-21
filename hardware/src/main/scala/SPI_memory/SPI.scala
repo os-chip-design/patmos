@@ -65,7 +65,6 @@ class SPI(count_s_clock: Int, startup_count_to : Int = 0x3FFF) extends Module {
 
   val transmitCMD :: transmitAddress :: transmitData :: writeDelay :: receiveData :: computeAddress :: Nil = Enum(6)
   val SubStateReg = RegInit(transmitCMD)
-  SubStateReg := transmitCMD;
 
   val CntReg = RegInit(0.U(16.W))
   CntReg := 0.U;

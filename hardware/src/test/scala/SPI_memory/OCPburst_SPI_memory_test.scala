@@ -95,7 +95,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
                                                       dut.io.SPI_interface.MISO,
                                                       dut.io.SPI_interface.S_CLK, fail);
 
-      dut.clock.setTimeout(21000);
+      dut.clock.setTimeout(100000);
       software_memory_sim.step(200);//wait for startup
       dut.io.SPI_interface.CE.expect(true.B)
 
