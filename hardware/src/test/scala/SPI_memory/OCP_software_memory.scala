@@ -89,7 +89,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
 
   def write_miso() = {
     if(funcs.falling_edge(S_CLK.peek().litToBoolean) && CE.peek().litToBoolean == false) {
-      val d : Boolean = ((transmitData >> bits_read) & 0x1) == 1;
+      val d : Boolean = ((transmitData >> (7-bits_read)) & 0x1) == 1;
       MISO.poke(d.B);
       //val byte = transmitData.asUInt
       //val bit = byte(0.U)
@@ -140,7 +140,7 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         //println(Console.MAGENTA + "Read address: " + address.toHexString + ", while bytes was: " + b.toHexString + Console.RESET)
         address_bytes_read += 1;
       }
-      else{
+      if (address_bytes_read == 3){
         //println(Console.MAGENTA + "address: " + address + Console.RESET)
         transmitData = memory(address)
         //println(Console.MAGENTA + "transmit data is = " + transmitData + Console.RESET)
@@ -165,7 +165,6 @@ class Software_Memory_Sim(m : Module, CE : Bool, MOSI : Bool, MISO : Bool, S_CLK
         address = address + 1;
       }
     }
-
   }
 
   def step (n : Int = 1) : Unit = {
@@ -382,7 +381,5 @@ class OCP_master_commands(master : OcpBurstMasterSignals, slave : OcpBurstSlaveS
 
     slave.Resp.expect(OcpResp.NULL)
     slave.DataAccept.expect(false.B)
-
   }
-
 }
