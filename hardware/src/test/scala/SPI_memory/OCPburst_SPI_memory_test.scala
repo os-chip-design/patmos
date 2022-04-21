@@ -248,8 +248,8 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       ocp_tester.write_command(115161, Array(43451, 1355, 12355, 12512), Array(0xF, 0x0, 0x0, 0xF));
       test_memory(software_memory_sim, 115161, Array(43451, 0, 0, 12512), fail);
 
-      ocp_tester.write_command(0, Array(1, 2, 3, 4), Array(0x0, 0xF, 0xF, 0x0));
-      test_memory(software_memory_sim, 0, Array(0, 2, 3, 0), fail);
+      ocp_tester.write_command(0, Array(54, 52, 15, 26), Array(0x0, 0xF, 0xF, 0x0));
+      test_memory(software_memory_sim, 0, Array(0x01, 52, 15, 0x04), fail);
     
     }
   }
