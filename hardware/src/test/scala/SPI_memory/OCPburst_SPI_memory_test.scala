@@ -287,7 +287,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
         val read_data = ocp_tester.read_command(my_address);
 
         for(x <- 0 to read_data.length){
-          if(my_data == read_data) {
+          if(my_data(x) == read_data(x)) {
             println("passed read write test")
           }
           else{
@@ -299,7 +299,53 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       }
     }
   }
-  //TODO byte enable test
+
+  "Write read test with byte enable software" should "pass" in {
+    test(new OCPburst_SPI_memory(2, 0x000F)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+
+      println(Console.GREEN + "Write read test with byte enable software" + Console.RESET)
+
+      dut.clock.setTimeout(200000);
+
+      val software_memory_sim = new Software_Memory_Sim(dut,
+        dut.io.CE,
+        dut.io.MOSI,
+        dut.io.MISO,
+        dut.io.S_CLK,
+        fail);
+
+      val master = dut.io.OCP_interface.M
+      val slave = dut.io.OCP_interface.S
+
+      val ocp_tester = new OCP_master_commands(master, slave, software_memory_sim.step, fail);
+
+      val ran = new scala.util.Random(System.currentTimeMillis());
+
+      for(x <- 0 to 10){
+        val my_data : Array[BigInt] = Array(ran.nextInt(Integer.MAX_VALUE), ran.nextInt(Integer.MAX_VALUE), ran.nextInt(Integer.MAX_VALUE), ran.nextInt(Integer.MAX_VALUE));
+        val my_address = ran.nextInt(0xFFFFFF);
+        val byte_enable =  Array(ran.nextInt(0xF), ran.nextInt(0xF), ran.nextInt(0xF), ran.nextInt(0xF));
+
+        ocp_tester.write_command(my_address, my_data, byte_enable);
+
+        val read_data = ocp_tester.read_command(my_address);
+
+        for(x <- 0 to read_data.length){
+
+          if(my_data(x) == read_data(x)) {
+            println("passed read write test")
+          }
+          else{
+            println(Console.RED + "The read value was not the same as the written value. \n Written value: " + my_data(0) + ", " + my_data(1) + ", " + my_data(2) + ", " + my_data(3)
+              + " \nRead value was: " + read_data(0) + ", " + read_data(1) + ", " + read_data(2) + ", " + read_data(3) + Console.RESET);
+            fail();
+          }
+
+
+        }
+      }
+    }
+  }
 
 }
 
