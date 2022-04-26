@@ -3,6 +3,7 @@
 
   <frequency Hz="50000000"/>
   <pipeline dual="false" />
+  <oschip active="true" />
   <cores count="1" />
   <CmpDevs>
     <CmpDev name="Hardlock" />

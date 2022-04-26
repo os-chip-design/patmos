@@ -17,10 +17,10 @@ import Constants._
 import util.Utility
 import util.BlackBoxRom
 
-class Fetch(fileName : String) extends Module {
-  val io = IO(new FetchIO())
+class Fetch(fileName : String, oschip : Boolean) extends Module {
+  val io = IO(new FetchIO)
 
-  val pcReg = RegInit(UInt(1, PC_SIZE))
+  val pcReg = RegInit(Mux(oschip.B, io.boot.pc.bootAddr, UInt(1, PC_SIZE)))
   val pcNext = dontTouch(Wire(UInt(PC_SIZE.W))) // for emulator
   val addrEven = Wire(UInt())
   val addrOdd = Wire(UInt())

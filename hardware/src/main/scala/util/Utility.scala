@@ -121,6 +121,7 @@ object Utility {
     var tempStr = ""
     println("\nPatmos configuration \"" + util.Config.getConfig.description + "\"")
     println("\tFrequency: "+ (CLOCK_FREQ/1000000).toString +" MHz")
+    println("\toschip: "+ Config.getConfig.oschip.toString)
     println("\tPipelines: "+ PIPE_COUNT.toString)
     println("\tCores: "+ Config.getConfig.coreCount.toString)
     if (ICACHE_TYPE == ICACHE_TYPE_METHOD) {

@@ -296,6 +296,23 @@ class RegFileIO() extends Bundle() {
   val rfWrite = Vec(PIPE_COUNT, new Result().asInput )
 }
 
+class BootROMIO(val addrWidth : Int) extends Bundle{
+  val enEven = UInt(1.W)
+  val addrEven = UInt(addrWidth.W)
+  val dataEven = UInt(30.W)
+  val enOdd = UInt(1.W)
+  val addrOdd = UInt(addrWidth.W)
+  val dataOdd = UInt(30.W)
+}
+class PCIO extends Bundle{
+  val stall = UInt(1.W)
+  val reset = UInt(1.W)
+  val bootAddr = UInt(30.W)
+}
+class BootingIO(val addrWidth: Int) extends Bundle{
+  val pc = new PCIO
+  val rom = new BootROMIO(addrWidth)
+}
 class FetchIO extends Bundle() {
   val ena = Bool(INPUT)
   val fedec = new FeDec().asOutput
@@ -308,6 +325,8 @@ class FetchIO extends Bundle() {
   // connections to instruction cache
   val feicache = new FeICache().asOutput
   val icachefe = new ICacheFe().asInput
+  // connections to wishbone registers
+  val boot = Input(new BootingIO(ADDR_WIDTH))
 }
 
 class ExcDec() extends Bundle() {
