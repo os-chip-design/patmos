@@ -29,7 +29,7 @@ object Utility {
     it is read into two Array[BigInt] objects containing the ROM instructions that are parsed to Verilog code in utils.BlackBoxRom
     and used in Fetch.scala. The two arrays represent the even and odd sections of the dual issue RAM.
   */
-  def binToDualRom(fileName: String, width: Int): (Array[BigInt], Array[BigInt]) = {
+  def binToDualRom(fileName: String, width: Int, customLength: Int = 0): (Array[BigInt], Array[BigInt]) = {
     val bytesPerWord = (width+7) / 8
 
     println("Reading " + fileName)
@@ -37,7 +37,12 @@ object Utility {
 
     // compute ROM length (length of binary rounded up to power of two, then divided by half to match dual issue ROM)
     val numInstructions = math.max(1, byteArray.length / bytesPerWord)
-    val romLen = math.pow(2, log2Up(numInstructions) - 1).toInt
+    var romLen = math.pow(2, log2Up(numInstructions) - 1).toInt
+
+    if (customLength != 0){
+      // Override if custom length is requested
+      romLen = customLength/2
+    }
 
     // init even and odd ROM
     val romEven = new Array[BigInt](romLen)
