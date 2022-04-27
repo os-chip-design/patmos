@@ -56,10 +56,10 @@ class BootMemory(fileName : String) extends Module{
   val rdAddrEvenReg = RegNext(io.read.addrEven)
   val rdAddrOddReg = RegNext(io.read.addrOdd)
 
-  //rom.io.addressEven := RegNext(io.read.addrEven(BOOT_ROM_ADDR_WIDTH - 1, 1))
-  //rom.io.addressOdd := RegNext(io.read.addrOdd(BOOT_ROM_ADDR_WIDTH - 1, 1))
-  rom.io.addressEven := rdAddrEvenReg(BOOT_ROM_ADDR_WIDTH - 1, 1)
-  rom.io.addressOdd := rdAddrOddReg(BOOT_ROM_ADDR_WIDTH - 1, 1)
+  rom.io.addressEven := RegNext(io.read.addrEven(BOOT_ROM_ADDR_WIDTH - 1, 1))
+  rom.io.addressOdd := RegNext(io.read.addrOdd(BOOT_ROM_ADDR_WIDTH - 1, 1))
+  //rom.io.addressEven := rdAddrEvenReg(BOOT_ROM_ADDR_WIDTH - 1, 1)
+  //rom.io.addressOdd := rdAddrOddReg(BOOT_ROM_ADDR_WIDTH - 1, 1)
   io.read.dataEven := rom.io.instructionEven
   io.read.dataOdd := rom.io.instructionOdd
 /*
