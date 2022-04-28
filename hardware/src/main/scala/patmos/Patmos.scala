@@ -38,7 +38,7 @@ class PatmosCore(binFile: String, nr: Int, cnt: Int, oschip: Boolean) extends Mo
     val excInOut = new OcpCoreSlavePort(ADDR_WIDTH, DATA_WIDTH)
     val mmuInOut = new OcpCoreSlavePort(ADDR_WIDTH, DATA_WIDTH)
     val copInOut = Vec(COP_COUNT, new CoprocessorIO())
-    val boot = Input(new BootingIO(ADDR_WIDTH))
+    val boot = Input(new BootingIO)
   })
 
   val icache =

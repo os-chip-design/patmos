@@ -32,6 +32,11 @@ class Fetch(fileName : String, oschip : Boolean) extends Module {
   val romAddrUInt = log2Up(romContents._1.length)
   //val rom = Module(new BlackBoxRom(romContents, romAddrUInt))
   val bootMem = Module(new BootMemory(fileName = fileName))
+  bootMem.io.write.ena := io.boot.bootMemWr.ena
+  bootMem.io.write.addrEven := io.boot.bootMemWr.addrEven
+  bootMem.io.write.dataEven := io.boot.bootMemWr.dataEven
+  bootMem.io.write.addrOdd := io.boot.bootMemWr.addrOdd
+  bootMem.io.write.dataOdd := io.boot.bootMemWr.dataOdd
 
   
   val instr_a_ispm = Wire(UInt())

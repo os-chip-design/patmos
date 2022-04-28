@@ -106,10 +106,10 @@ object Constants {
   // Boot memory constants TODO put into config-file
   val BOOT_ADDR_SPACE = 0x0000ffff // Largest address reserved for boot memory (taken from patmos handbook)
   val BOOT_ROM_ENTRIES = 1024 // Must be power of 2
-  val BOOT_ROM_ADDR_WIDTH = log2Up(BOOT_ROM_ENTRIES/2) // Divided by two to match even/odd addresses
+  val BOOT_ROM_ADDR_WIDTH = log2Up(BOOT_ROM_ENTRIES/2) // Divided by two to match even/odd memories
   val WRITABLE_BOOT_ENTRIES = 1024 // Must be power of 2
-  val WRITABLE_BOOT_ADDR_WIDTH = log2Up(WRITABLE_BOOT_ENTRIES/2) // Divided by two to match even/odd addresses
-  val BOOT_TOTAL_ADDR_WIDTH = log2Up(BOOT_ROM_ENTRIES + WRITABLE_BOOT_ENTRIES)
+  val WRITABLE_BOOT_ADDR_WIDTH = log2Up(WRITABLE_BOOT_ENTRIES/2) // Divided by two to match even/odd memories
+  val BOOT_TOTAL_ADDR_WIDTH = log2Up(BOOT_ROM_ENTRIES + WRITABLE_BOOT_ENTRIES) - 1 // Minus one to match even/odd memories
 
   val BYTE_WIDTH = 8
   val BYTES_PER_WORD = DATA_WIDTH / BYTE_WIDTH

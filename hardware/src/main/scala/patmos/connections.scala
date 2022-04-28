@@ -304,15 +304,38 @@ class BootROMIO(val addrWidth : Int) extends Bundle{
   val addrOdd = UInt(addrWidth.W)
   val dataOdd = UInt(30.W)
 }
+
 class PCIO extends Bundle{
   val stall = UInt(1.W)
   val reset = UInt(1.W)
   val bootAddr = UInt(30.W)
 }
-class BootingIO(val addrWidth: Int) extends Bundle{
-  val pc = new PCIO
-  val rom = new BootROMIO(addrWidth)
+
+class BootWriteIO extends Bundle(){
+  val ena = Input(UInt(1.W))
+  val addrEven = Input(UInt(WRITABLE_BOOT_ADDR_WIDTH.W))
+  val dataEven = Input(UInt(INSTR_WIDTH.W))
+  val addrOdd = Input(UInt(WRITABLE_BOOT_ADDR_WIDTH.W))
+  val dataOdd = Input(UInt(INSTR_WIDTH.W))
 }
+
+class BootReadIO extends Bundle(){
+  val addrEven = Input(UInt((BOOT_TOTAL_ADDR_WIDTH).W))
+  val addrOdd = Input(UInt((BOOT_TOTAL_ADDR_WIDTH).W))
+  val dataEven = Output(UInt(INSTR_WIDTH.W))
+  val dataOdd = Output(UInt(INSTR_WIDTH.W))
+}
+
+class BootMemoryIO extends Bundle(){
+  val write = new BootWriteIO()
+  val read = new BootReadIO()
+}
+
+class BootingIO extends Bundle{
+  val pc = Input(new PCIO)
+  val bootMemWr = Input(new BootWriteIO)
+}
+
 class FetchIO extends Bundle() {
   val ena = Bool(INPUT)
   val fedec = new FeDec().asOutput
@@ -326,7 +349,7 @@ class FetchIO extends Bundle() {
   val feicache = new FeICache().asOutput
   val icachefe = new ICacheFe().asInput
   // connections to wishbone registers
-  val boot = Input(new BootingIO(ADDR_WIDTH))
+  val boot = Input(new BootingIO())
 }
 
 class ExcDec() extends Bundle() {

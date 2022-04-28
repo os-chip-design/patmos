@@ -1,41 +1,22 @@
 package patmos
 
 import Chisel._
+import chisel3.dontTouch
 
 import Constants._
 
 import util.Utility
 import util.BlackBoxRom
 
-class BootWriteIO extends Bundle(){
-  val ena = Input(UInt(1.W))
-  val addrEven = Input(UInt(WRITABLE_BOOT_ADDR_WIDTH.W))
-  val dataEven = Input(UInt(INSTR_WIDTH.W))
-  val addrOdd = Input(UInt(WRITABLE_BOOT_ADDR_WIDTH.W))
-  val dataOdd = Input(UInt(INSTR_WIDTH.W))
-}
-
-class BootReadIO extends Bundle(){
-  val addrEven = Input(UInt(BOOT_ROM_ADDR_WIDTH.W))
-  val addrOdd = Input(UInt(BOOT_ROM_ADDR_WIDTH.W))
-  val dataEven = Output(UInt(INSTR_WIDTH.W))
-  val dataOdd = Output(UInt(INSTR_WIDTH.W))
-}
-
-class BootMemoryIO extends Bundle(){
-  //val write = new BootWriteIO()
-  val read = new BootReadIO()
-}
-
 class BootMemory(fileName : String) extends Module{
 
   // Check for errors in user input
   if (!isPow2(BOOT_ROM_ENTRIES)){
     // Check if number of entries are valid
-    throw new Error("romEntries must be power of 2")
+    throw new Error("BOOT_ROM_ENTRIES must be power of 2")
   } else if (!isPow2(WRITABLE_BOOT_ENTRIES)){
     // Check if number of entries are valid
-    throw new Error("writableMemEntries must be power of 2")
+    throw new Error("WRITABLE_BOOT_ENTRIES must be power of 2")
   } else if ((BOOT_ROM_ENTRIES + WRITABLE_BOOT_ENTRIES) > (BOOT_ADDR_SPACE + 1)){
     // Check if boot memory is too large
     throw new Error("Boot memory exceeds the address spaces reserved for boot memory")
@@ -53,16 +34,16 @@ class BootMemory(fileName : String) extends Module{
   val rom = Module(new BlackBoxRom(romContents, BOOT_ROM_ADDR_WIDTH))
 
   // Address registers for ROM, to make it synchronous
-  val rdAddrEvenReg = RegNext(io.read.addrEven)
-  val rdAddrOddReg = RegNext(io.read.addrOdd)
+  val rdAddrEvenReg = dontTouch(RegNext(io.read.addrEven))
+  val rdAddrOddReg = dontTouch(RegNext(io.read.addrOdd))
 
-  rom.io.addressEven := RegNext(io.read.addrEven(BOOT_ROM_ADDR_WIDTH - 1, 1))
-  rom.io.addressOdd := RegNext(io.read.addrOdd(BOOT_ROM_ADDR_WIDTH - 1, 1))
-  //rom.io.addressEven := rdAddrEvenReg(BOOT_ROM_ADDR_WIDTH - 1, 1)
-  //rom.io.addressOdd := rdAddrOddReg(BOOT_ROM_ADDR_WIDTH - 1, 1)
-  io.read.dataEven := rom.io.instructionEven
-  io.read.dataOdd := rom.io.instructionOdd
-/*
+  //rom.io.addressEven := RegNext(io.read.addrEven(BOOT_ROM_ADDR_WIDTH - 1, 1))
+  //rom.io.addressOdd := RegNext(io.read.addrOdd(BOOT_ROM_ADDR_WIDTH - 1, 1))
+  rom.io.addressEven := rdAddrEvenReg(BOOT_ROM_ADDR_WIDTH - 1, 1)
+  rom.io.addressOdd := rdAddrOddReg(BOOT_ROM_ADDR_WIDTH - 1, 1)
+  //io.read.dataEven := rom.io.instructionEven
+  //io.read.dataOdd := rom.io.instructionOdd
+
   val memWithWrEven = Module(new MemBlock(size = WRITABLE_BOOT_ENTRIES / 2, INSTR_WIDTH))
   memWithWrEven.io.rdAddr := (io.read.addrEven - UInt(BOOT_ROM_ENTRIES))(BOOT_ROM_ADDR_WIDTH - 1, 1) // Read address input
   memWithWrEven.io.wrAddr := (io.write.addrEven - UInt(BOOT_ROM_ENTRIES))(BOOT_ROM_ADDR_WIDTH - 1, 1) // Write address input
@@ -78,17 +59,15 @@ class BootMemory(fileName : String) extends Module{
 
   // Switch between ROM and writable memory
   when(rdAddrEvenReg > UInt(BOOT_ROM_ENTRIES - 1)){
-    io.rdData.rdDataEven := memWithWrEven.io.rdData
+    io.read.dataEven := memWithWrEven.io.rdData
   }. otherwise {
-    io.rdData.rdDataEven := rom.io.instructionEven
+    io.read.dataEven := rom.io.instructionEven
   }
   
   // Switch between ROM and writable memory
   when(rdAddrOddReg > UInt(BOOT_ROM_ENTRIES - 1)){
-    io.rdData.rdDataOdd := memWithWrOdd.io.rdData
+    io.read.dataOdd := memWithWrOdd.io.rdData
   }. otherwise {
-    io.rdData.rdDataEven := rom.io.instructionOdd
+    io.read.dataOdd := rom.io.instructionOdd
   }
-  */
-
 }

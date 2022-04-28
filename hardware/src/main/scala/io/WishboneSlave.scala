@@ -1,5 +1,5 @@
 package io
-import patmos.{BootingIO,PCIO,BootROMIO}
+import patmos.{BootingIO,PCIO,BootWriteIO}
 import patmos.Constants._
 import chisel3._
 class WishboneIO extends Bundle{
@@ -14,21 +14,21 @@ class WishboneIO extends Bundle{
   Address linking will be: bootAddr -> 0x30000000, reset -> 0x30000004, stall -> 0x30000008, dataOdd -> 0x3000000C ...
   We can enforce specific address linking with a listmap if needed
  */
-class WishboneSlave(baseAddr : Int  = 0x30000000, addrWidth: Int = ADDR_WIDTH) extends Module{
+class WishboneSlave(baseAddr : Int  = 0x30000000) extends Module{
   val io = IO(new Bundle{
     val wb = new WishboneIO
-    val patmos = Output(new Bundle{
-      val boot = new BootingIO(addrWidth)
-    })
+    val patmos = new Bundle{
+      val boot = new BootingIO
+    }
   })
   // Initialization wishbone register groups
   val initPC = 0.U(1.W) ## 1.U(1.W) ## 1.U(30.W) // Init: stall = 0, reset = 1, bootAddr = 1
   val initROM = 0.U // Init: all signals = 0
   // List of wishbone register groups
-  val WBReg = Seq(RegInit(initPC.asTypeOf(new PCIO)), RegInit(initROM.asTypeOf(new BootROMIO(addrWidth))))
+  val WBReg = Seq(RegInit(initPC.asTypeOf(new PCIO)), RegInit(initROM.asTypeOf(new BootWriteIO)))
   // Connecting them to the outer world
   io.patmos.boot.pc <> WBReg(0)
-  io.patmos.boot.rom <> WBReg(1)
+  io.patmos.boot.bootMemWr <> WBReg(1)
   io.wb.dout := 0.U
   var addrOffset = 0
   val validAddr = WireDefault(false.B)
