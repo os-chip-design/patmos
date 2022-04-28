@@ -4,31 +4,31 @@ import chisel3._
 import chisel3.util._
 import ocp._
 import chisel3.experimental.chiselName
+import io._
+import patmos.Constants._
 
-class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FFF) extends Module {
-  val io = IO(new Bundle {
+object OCPburst_SPI_memory extends DeviceObject {
+  def init(params: Map[String, String]) = { }
 
-    val OCP_interface = new OcpBurstSlavePort(24, 32, 4)
+  def create(params: Map[String, String]): OCPburst_SPI_memory = {
+    Module(new OCPburst_SPI_memory(count_s_clock = 1, startup_count_to = 0x3FFF))
+  }
 
-    val CE = Output(Bool())
-    val MOSI = Output(Bool())
-    val MISO = Input(Bool())
-    val S_CLK = Output(Bool())
+  trait Pins extends patmos.HasPins {
+    override val pins = new Bundle {
+      val spi = new SPI_Interface()
+    }
+  }
+}
 
-    //DEBUG io
-    val SR = Output(UInt(4.W))
-    val CntReg = Output(UInt(8.W))
-    val SPI_DATA_VALID = Output(Bool());
-    val SPI_write_complete = Output(Bool());
-    //val SPI_CntReg = Output(UInt(8.W))
-    //val SPI_POS_REG = Output(UInt(4.W))
-  })
+class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FFF) extends BurstDevice(21) {
+  override val io = new BurstDeviceIO(21) with OCPburst_SPI_memory.Pins  
 
   //Defaults
-  io.OCP_interface.S.Resp := 0.U
-  io.OCP_interface.S.CmdAccept := false.B
-  io.OCP_interface.S.DataAccept := false.B
-  io.OCP_interface.S.Data := 0.U
+  io.ocp.S.Resp := 0.U
+  io.ocp.S.CmdAccept := false.B
+  io.ocp.S.DataAccept := false.B
+  io.ocp.S.Data := 0.U
 
 
   val SPI = Module(new SPI(count_s_clock, startup_count_to))
@@ -41,25 +41,22 @@ class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FF
   SPI.io.WriteEnable := false.B
   SPI.io.ByteEnable := 0.U
 
-  io.SPI_DATA_VALID := SPI.io.DataValid;
-  io.SPI_write_complete := SPI.io.WriteCompleted;
   //io.SPI_CntReg := SPI.io.CntReg;
   //io.SPI_POS_REG := SPI.io.PosReg;
 
-  io.MOSI := SPI.io.SPI_interface.MOSI
-  io.CE := SPI.io.SPI_interface.CE
-  SPI.io.SPI_interface.MISO := io.MISO
-  io.S_CLK := SPI.io.SPI_interface.S_CLK;
+  io.pins.spi.MOSI := SPI.io.SPI_interface.MOSI
+  io.pins.spi.CE := SPI.io.SPI_interface.CE
+  SPI.io.SPI_interface.MISO := io.pins.spi.MISO
+  io.pins.spi.S_CLK := SPI.io.SPI_interface.S_CLK;
 
   val slave_resp = RegInit(OcpResp.NULL)
-  io.OCP_interface.S.Resp := slave_resp;
+  io.ocp.S.Resp := slave_resp;
 
   val idle :: read :: sampleData :: read_transmit :: write :: Nil = Enum(5)
   val StateReg = RegInit(idle)
-  io.SR := StateReg;
+
 
   val CntReg = RegInit(0.U(8.W))
-  io.CntReg := CntReg
 
   val WriteData = Reg(Vec(4,UInt(32.W)))
   val WriteByteEN = Reg(Vec(4, UInt(4.W)))
@@ -71,16 +68,16 @@ class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FF
   switch(StateReg) {
     is(idle) {
       slave_resp := OcpResp.NULL;
-      switch(io.OCP_interface.M.Cmd) {
+      switch(io.ocp.M.Cmd) {
         is(OcpCmd.WR) {
           CntReg := 0.U
           StateReg := sampleData
-          address := io.OCP_interface.M.Addr;
+          address := io.ocp.M.Addr;
         }
         is(OcpCmd.RD) {
           CntReg := 0.U
           StateReg := read
-          address := io.OCP_interface.M.Addr;
+          address := io.ocp.M.Addr;
         }
       }
     }
@@ -88,7 +85,7 @@ class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FF
       address := address;
       SPI.io.Address := address;
       SPI.io.ReadEnable := true.B
-      io.OCP_interface.S.CmdAccept := true.B;
+      io.ocp.S.CmdAccept := true.B;
 
       when(SPI.io.DataValid){
         CntReg := 0.U
@@ -96,10 +93,10 @@ class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FF
       }
     }
     is(read_transmit) {
-      io.OCP_interface.S.Data := SPI.io.ReadData(CntReg)
+      io.ocp.S.Data := SPI.io.ReadData(CntReg)
       CntReg := CntReg + 1.U
       SPI.io.ReadEnable := false.B
-      io.OCP_interface.S.Resp := OcpResp.DVA
+      io.ocp.S.Resp := OcpResp.DVA
 
       when(CntReg === 3.U) {
         CntReg := 0.U
@@ -109,15 +106,15 @@ class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FF
     is(sampleData) {
       address := address;
       when(CntReg === 1.U){
-        io.OCP_interface.S.CmdAccept := true.B
+        io.ocp.S.CmdAccept := true.B
       }.otherwise{
-        io.OCP_interface.S.CmdAccept := false.B
+        io.ocp.S.CmdAccept := false.B
       }
-      io.OCP_interface.S.DataAccept := true.B
+      io.ocp.S.DataAccept := true.B
 
-      when(io.OCP_interface.M.DataValid.toBool()) {
-        WriteData(CntReg) := io.OCP_interface.M.Data;
-        WriteByteEN(CntReg) := io.OCP_interface.M.DataByteEn
+      when(io.ocp.M.DataValid.toBool()) {
+        WriteData(CntReg) := io.ocp.M.Data;
+        WriteByteEN(CntReg) := io.ocp.M.DataByteEn
         CntReg := CntReg + 1.U
       }
 

@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 import SPI_CMDS._
 
-object SPI_CMDS{
+object SPI_CMDS {
   val CMDResetEnable = 102.U(8.W)
   val CMDReset = 153.U(8.W)
   val CMDSPIRead = 3.U(8.W)

@@ -159,7 +159,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       dut.io.WriteData(0).poke(0x7ABBCCDD.U);
       dut.io.WriteData(1).poke(0x12345678.U);
       dut.io.WriteData(2).poke(0x7F00AD2A.U);
-      dut.io.WriteData(3).poke(0x7DFA1234.U);
+      dut.io.WriteData(3).poke(0x7DFA1234.U); 
       dut.io.ByteEnable.poke(0xFFFF.U);
       software_memory_sim.step();
       dut.io.WriteEnable.poke(false.B);
@@ -180,7 +180,7 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
       dut.io.ReadData(0).expect(0x7ABBCCDD.U);
       dut.io.ReadData(1).expect(0x12345678.U);
       dut.io.ReadData(2).expect(0x7F00AD2A.U);
-      dut.io.ReadData(3).expect(0x7DFA1234.U);
+      dut.io.ReadData(3).expect(0x7DFA1234.U); 
 
     }
   }
