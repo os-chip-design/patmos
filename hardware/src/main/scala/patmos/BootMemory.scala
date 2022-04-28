@@ -45,15 +45,15 @@ class BootMemory(fileName : String) extends Module{
   //io.read.dataOdd := rom.io.instructionOdd
 
   val memWithWrEven = Module(new MemBlock(size = WRITABLE_BOOT_ENTRIES / 2, INSTR_WIDTH))
-  memWithWrEven.io.rdAddr := (io.read.addrEven - UInt(BOOT_ROM_ENTRIES))(BOOT_ROM_ADDR_WIDTH - 1, 1) // Read address input
-  memWithWrEven.io.wrAddr := (io.write.addrEven - UInt(BOOT_ROM_ENTRIES))(BOOT_ROM_ADDR_WIDTH - 1, 1) // Write address input
+  memWithWrEven.io.rdAddr := (io.read.addrEven - BOOT_ROM_ENTRIES.U)(BOOT_ROM_ADDR_WIDTH - 1, 1) // Read address input
+  memWithWrEven.io.wrAddr := (io.write.addrEven - BOOT_ROM_ENTRIES.U)(BOOT_ROM_ADDR_WIDTH - 1, 1) // Write address input
   memWithWrEven.io.wrData := io.write.dataEven // Write data input
   memWithWrEven.io.wrEna := io.write.enaEven // Write enable
 
   // Writable memory odd
   val memWithWrOdd = Module(new MemBlock(size = WRITABLE_BOOT_ENTRIES / 2, INSTR_WIDTH))
-  memWithWrOdd.io.rdAddr := (io.read.addrOdd - UInt(BOOT_ROM_ENTRIES))(BOOT_ROM_ADDR_WIDTH - 1, 1) // Read address input
-  memWithWrOdd.io.wrAddr := (io.write.addrOdd - UInt(BOOT_ROM_ENTRIES))(BOOT_ROM_ADDR_WIDTH - 1, 1) // Write address input
+  memWithWrOdd.io.rdAddr := (io.read.addrOdd - BOOT_ROM_ENTRIES.U)(BOOT_ROM_ADDR_WIDTH - 1, 1) // Read address input
+  memWithWrOdd.io.wrAddr := (io.write.addrOdd - BOOT_ROM_ENTRIES.U)(BOOT_ROM_ADDR_WIDTH - 1, 1) // Write address input
   memWithWrOdd.io.wrData := io.write.dataOdd // Write data input
   memWithWrOdd.io.wrEna := io.write.enaOdd // Write enable
 
