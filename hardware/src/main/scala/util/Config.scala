@@ -56,6 +56,7 @@ import java.io.File
 abstract class Config {
   val description: String
   val frequency: Int
+  val oschip: Boolean 
   val pipeCount: Int
   val coreCount: Int
   val cmpDevices: Set[String]
@@ -191,6 +192,9 @@ object Config {
 
       val frequency = getIntAttr(node, "frequency", "@Hz",
                                  hasParent, defaultConf.frequency)
+      
+      val oschip = getBooleanAttr(node, "oschip", "@active",
+                              hasParent, defaultConf.oschip)
 
       val dual = getBooleanAttr(node, "pipeline", "@dual",
                                 hasParent, defaultConf.pipeCount > 1)
@@ -391,6 +395,7 @@ object Config {
   val nullConfig = new Config {
     val description = "dummy"
     val frequency = 0
+    val oschip = false
     val pipeCount = 0
     val coreCount = 0
     val cmpDevices = Set[String]()

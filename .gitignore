@@ -2,6 +2,7 @@ config.mk*
 *~
 hardware/project/project/target/*
 hardware/project/target
+hardware/project/project/
 hardware/target
 hardware/build
 hardware/generated
@@ -21,7 +22,10 @@ simulator/build
 install/
 doc/c_doc
 .vscode
-.metals
+.metals/
+.bloop/
+.ammonite/
+metals.sbt
 local/
 
 *_summary.xml
@@ -81,6 +85,7 @@ local/
 
 # Ignore Vivado journal files
 vivado*.jou
+webtalk*.jou
 
 # Ignore LaTeX temp files
 doc/**/*.aux
