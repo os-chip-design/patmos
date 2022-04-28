@@ -16,7 +16,14 @@ object OCPburst_SPI_memory extends DeviceObject {
 
   trait Pins extends patmos.HasPins {
     override val pins = new Bundle {
-      val spi = new SPI_Interface()
+      val spiOut = Output(new Bundle {
+        val CE = Bits(width = 1.W)
+        val MOSI = Bits(width = 1.W)
+        val S_CLK = Bits(width = 1.W)
+      })
+      val spiIn = Input(new Bundle{
+        val MISO = Bits(width = 1.W)
+      })
     }
   }
 }
@@ -44,10 +51,10 @@ class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FF
   //io.SPI_CntReg := SPI.io.CntReg;
   //io.SPI_POS_REG := SPI.io.PosReg;
 
-  io.pins.spi.MOSI := SPI.io.SPI_interface.MOSI
-  io.pins.spi.CE := SPI.io.SPI_interface.CE
-  SPI.io.SPI_interface.MISO := io.pins.spi.MISO
-  io.pins.spi.S_CLK := SPI.io.SPI_interface.S_CLK;
+  io.pins.spiOut.MOSI := SPI.io.SPI_interface.MOSI
+  io.pins.spiOut.CE := SPI.io.SPI_interface.CE
+  SPI.io.SPI_interface.MISO := io.pins.spiIn.MISO
+  io.pins.spiOut.S_CLK := SPI.io.SPI_interface.S_CLK;
 
   val slave_resp = RegInit(OcpResp.NULL)
   io.ocp.S.Resp := slave_resp;
