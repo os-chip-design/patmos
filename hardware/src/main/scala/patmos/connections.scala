@@ -312,11 +312,12 @@ class PCIO extends Bundle{
 }
 
 class BootWriteIO extends Bundle(){
-  val ena = Input(UInt(1.W))
-  val addrEven = Input(UInt(WRITABLE_BOOT_ADDR_WIDTH.W))
-  val dataEven = Input(UInt(INSTR_WIDTH.W))
-  val addrOdd = Input(UInt(WRITABLE_BOOT_ADDR_WIDTH.W))
-  val dataOdd = Input(UInt(INSTR_WIDTH.W))
+  val enaEven = UInt(1.W)
+  val addrEven = UInt(WRITABLE_BOOT_ADDR_WIDTH.W)
+  val dataEven = UInt(INSTR_WIDTH.W)
+  val enaOdd = UInt(1.W)
+  val addrOdd = UInt(WRITABLE_BOOT_ADDR_WIDTH.W)
+  val dataOdd = UInt(INSTR_WIDTH.W)
 }
 
 class BootReadIO extends Bundle(){
@@ -327,7 +328,7 @@ class BootReadIO extends Bundle(){
 }
 
 class BootMemoryIO extends Bundle(){
-  val write = new BootWriteIO()
+  val write = Input(new BootWriteIO())
   val read = new BootReadIO()
 }
 

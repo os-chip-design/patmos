@@ -17,9 +17,9 @@ class WishboneIO extends Bundle{
 class WishboneSlave(baseAddr : Int  = 0x30000000) extends Module{
   val io = IO(new Bundle{
     val wb = new WishboneIO
-    val patmos = new Bundle{
+    val patmos = Output(new Bundle{
       val boot = new BootingIO
-    }
+    })
   })
   // Initialization wishbone register groups
   val initPC = 0.U(1.W) ## 1.U(1.W) ## 1.U(30.W) // Init: stall = 0, reset = 1, bootAddr = 1
