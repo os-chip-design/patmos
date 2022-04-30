@@ -589,6 +589,9 @@ class PatmosChip(configFile: String, binFile: String, datFile: String) extends M
     pins("wishbone_" + pinid) = pin // Adding all of the wishbone io
   }
   pins("leds") = patmos.io.elements("Leds_led") // Adding LEDs
+  pins("uart_tx") = patmos.io.elements("UartCmp_tx") // Adding UART
+  pins("uart_rx") = patmos.io.elements("UartCmp_rx")
+  patmos.io.elements("UartCmp_rx") := pins("uart_rx")
   
   // Then we seal the deal by creating the actual io bundle, and connecting it to the components
   override val io = IO(new PatmosBundle(pins.map{case (pinid, devicepin) => pinid -> DataMirror.internal.chiselTypeClone(devicepin)}.toSeq: _*))
