@@ -20,12 +20,14 @@ import util.BlackBoxRom
 class Fetch(fileName : String, oschip : Boolean) extends Module {
   val io = IO(new FetchIO)
 
-  val pcReg = RegInit(Mux(oschip.B, io.boot.pc.bootAddr, UInt(1, PC_SIZE)))
+  val pcInit = Mux(oschip.B, io.boot.pc.bootAddr, UInt(1, PC_SIZE))
+
+  val pcReg = RegInit(pcInit)
   val pcNext = dontTouch(Wire(UInt(PC_SIZE.W))) // for emulator
   val addrEven = Wire(UInt())
   val addrOdd = Wire(UInt())
-  val addrEvenReg = Reg(init = UInt(2, PC_SIZE), next = addrEven)
-  val addrOddReg = Reg(init = UInt(1, PC_SIZE), next = addrOdd)
+  val addrEvenReg = Reg(init = pcInit + UInt(1, PC_SIZE), next = addrEven)
+  val addrOddReg = Reg(init = pcInit, next = addrOdd)
 
   // Instantiate dual issue ROM
   val romContents = Utility.binToDualRom(fileName, INSTR_WIDTH)
