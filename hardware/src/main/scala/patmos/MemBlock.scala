@@ -51,30 +51,14 @@ class MemBlockIO(size : Int, width : Int) extends Bundle {
 class MemBlock(size : Int, width : Int, bypass : Boolean = true) extends Module {
   val io = new MemBlockIO(size, width)
 
-  // switch between chisel SyncReadMem and SRAM using a verilog model
-  val useSimSRAM = false
 
-  if(useSimSRAM) {
-
-    val mem = Module(new SRAM(size, width))
-
-    mem.io.rdAddr := io.rdAddr
-    mem.io.wrAddr := io.wrAddr
-    mem.io.wrData := io.wrData
-    mem.io.wrEna := io.wrEna.asBool()
-    io.rdData := mem.io.rdData
-
-  } else {
-
-    val mem = SyncReadMem(size, UInt(width = width))
-    // write
-    when(io.wrEna === UInt(1)) {
-      mem.write(io.wrAddr, io.wrData)
-    }
-    // read
-    io.rdData := mem.read(io.rdAddr)
-
+  val mem = SyncReadMem(size, UInt(width = width))
+  // write
+  when(io.wrEna === UInt(1)) {
+    mem.write(io.wrAddr, io.wrData)
   }
+  // read
+  io.rdData := mem.read(io.rdAddr)
 
 
   if (bypass) {

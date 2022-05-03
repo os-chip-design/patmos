@@ -8,12 +8,14 @@
 package io
 
 import Chisel._
+import chisel3.VecInit
 
 import patmos.Constants._
 import ocp._
 
 import patmos.MemBlock
 import patmos.MemBlockIO
+import util.SRAM
 
 object OCRamCtrl extends DeviceObject {
   var addrWidth = 16
@@ -75,19 +77,15 @@ class OCRamCtrl(addrWidth : Int, ocpBurstLen : Int=4) extends BurstDevice(addrWi
   }
 
   // generate byte memories
-  val mem = new Array[MemBlockIO](BYTES_PER_WORD)
-  for (i <- 0 until BYTES_PER_WORD) {
-    mem(i) = MemBlock(size / BYTES_PER_WORD, BYTE_WIDTH, bypass = false).io
-  }
+  val mem = SRAM._32x256(clock)
 
   // store
-  val stmsk = Mux(wrEn, io.ocp.M.DataByteEn, Bits(0))
-  for (i <- 0 until BYTES_PER_WORD) {
-    mem(i) <= (stmsk(i), addr, io.ocp.M.Data(BYTE_WIDTH*(i+1)-1, BYTE_WIDTH*i))
-  }
+
+  mem.write(wrEn)(addr, io.ocp.M.Data, VecInit(io.ocp.M.Data.asBools))
+  
 
   // load
-  io.ocp.S.Data := mem.map(_(addr)).reduceLeft((x,y) => y ## x)
+  io.ocp.S.Data := mem.read(addr)
 
   // respond
   io.ocp.S.Resp := OcpResp.NULL
