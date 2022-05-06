@@ -1,7 +1,7 @@
 <patmos>
   <description>configuration for patmos caravel project</description>
 
-  <frequency Hz="50000000"/>
+  <frequency Hz="10000000"/>
   <pipeline dual="false" />
   <oschip active="true" />
   <cores count="1" />
