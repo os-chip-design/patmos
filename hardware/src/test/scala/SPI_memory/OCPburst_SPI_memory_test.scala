@@ -340,12 +340,16 @@ class OCPburst_SPI_memory_test extends AnyFlatSpec with ChiselScalatestTester
               + " \nRead value was: " + read_data(0) + ", " + read_data(1) + ", " + read_data(2) + ", " + read_data(3) + Console.RESET);
             fail();
           }
-
-
         }
       }
     }
   }
+
+  "Memory offset test" should "pass" in {
+
+  }
+  
+
 
 }
 

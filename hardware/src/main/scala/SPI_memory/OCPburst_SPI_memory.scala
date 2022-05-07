@@ -5,7 +5,7 @@ import chisel3.util._
 import ocp._
 import chisel3.experimental.chiselName
 
-class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FFF) extends Module {
+class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FFF, address_offset : Int = 0x0) extends Module {
   val io = IO(new Bundle {
 
     val OCP_interface = new OcpBurstSlavePort(24, 32, 4)
@@ -29,7 +29,6 @@ class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FF
   io.OCP_interface.S.CmdAccept := false.B
   io.OCP_interface.S.DataAccept := false.B
   io.OCP_interface.S.Data := 0.U
-
 
   val SPI = Module(new SPI(count_s_clock, startup_count_to))
   for(i <- 0 until 4){
