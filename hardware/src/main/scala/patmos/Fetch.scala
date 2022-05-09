@@ -17,20 +17,29 @@ import Constants._
 import util.Utility
 import util.BlackBoxRom
 
-class Fetch(fileName : String) extends Module {
-  val io = IO(new FetchIO())
+class Fetch(fileName : String, oschip : Boolean) extends Module {
+  val io = IO(new FetchIO)
 
-  val pcReg = RegInit(UInt(1, PC_SIZE))
+  val pcInit = Mux(oschip.B, io.boot.pc.bootAddr, UInt(1, PC_SIZE))
+
+  val pcReg = RegInit(pcInit)
   val pcNext = dontTouch(Wire(UInt(PC_SIZE.W))) // for emulator
   val addrEven = Wire(UInt())
   val addrOdd = Wire(UInt())
-  val addrEvenReg = Reg(init = UInt(2, PC_SIZE), next = addrEven)
-  val addrOddReg = Reg(init = UInt(1, PC_SIZE), next = addrOdd)
+  val addrEvenReg = Reg(init = pcInit + UInt(1, PC_SIZE), next = addrEven)
+  val addrOddReg = Reg(init = pcInit, next = addrOdd)
 
   // Instantiate dual issue ROM
   val romContents = Utility.binToDualRom(fileName, INSTR_WIDTH)
   val romAddrUInt = log2Up(romContents._1.length)
-  val rom = Module(new BlackBoxRom(romContents, romAddrUInt))
+  //val rom = Module(new BlackBoxRom(romContents, romAddrUInt))
+  val bootMem = Module(new BootMemory(fileName = fileName))
+  bootMem.io.write.enaEven := io.boot.bootMemWr.enaEven
+  bootMem.io.write.addrEven := io.boot.bootMemWr.addrEven
+  bootMem.io.write.dataEven := io.boot.bootMemWr.dataEven
+  bootMem.io.write.enaOdd := io.boot.bootMemWr.enaOdd
+  bootMem.io.write.addrOdd := io.boot.bootMemWr.addrOdd
+  bootMem.io.write.dataOdd := io.boot.bootMemWr.dataOdd
 
   
   val instr_a_ispm = Wire(UInt())
@@ -101,10 +110,10 @@ class Fetch(fileName : String) extends Module {
   // val data_even = RegNext(romEven(addrEven(romAddrUInt, 1)))
   // val data_odd = RegNext(romOdd(addrOdd(romAddrUInt, 1)))
 
-  rom.io.addressEven := addrEven(romAddrUInt, 1)
-  rom.io.addressOdd := addrOdd(romAddrUInt, 1)
-  val data_even = RegNext(rom.io.instructionEven)
-  val data_odd = RegNext(rom.io.instructionOdd)
+  bootMem.io.read.addrEven := addrEven
+  bootMem.io.read.addrOdd := addrOdd
+  val data_even = bootMem.io.read.dataEven
+  val data_odd = bootMem.io.read.dataOdd
   
   val instr_a_rom = Mux(pcReg(0) === UInt(0), data_even, data_odd)
   val instr_b_rom = Mux(pcReg(0) === UInt(0), data_odd, data_even)

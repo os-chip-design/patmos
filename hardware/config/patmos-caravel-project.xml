@@ -1,8 +1,9 @@
 <patmos>
   <description>configuration for patmos caravel project</description>
 
-  <frequency Hz="50000000"/>
+  <frequency Hz="10000000"/>
   <pipeline dual="false" />
+  <oschip active="true" />
   <cores count="1" />
   <CmpDevs>
     <CmpDev name="Hardlock" />
@@ -28,6 +29,9 @@
     <IO DevTypeRef="Timer" offset="2" intrs="0,1" allcores="true" />
     <IO DevTypeRef="Deadline" offset="3" allcores="true" />
     <IO DevTypeRef="Leds" offset="9"/>
+    <IO DevTypeRef="Gpio_in" offset="10"/>
+    <IO DevTypeRef="Gpio_out" offset="11"/>
+    <IO DevTypeRef="Gpio_oe" offset="12"/>
   </IOs>
 
   <Devs>
@@ -35,12 +39,33 @@
     <Dev DevType="Deadline" entity="Deadline" iface="OcpCore"/>
     <Dev DevType="Leds" entity="Leds" iface="OcpCore">
       <params>
-        <param name="ledCount" value="8"/>
+        <param name="ledCount" value="1"/>
       </params>
     </Dev>
     <Dev DevType="OCRam" entity="OCRamCtrl" iface="OcpBurst">
       <params>
          <param name="sramAddrWidth" value="10" />
+      </params>
+    </Dev>
+    <Dev DevType="Gpio_in" entity="Gpio" iface="OcpCore">
+      <params>
+        <param name="bankCount" value="1"/>
+        <param name="bankWidth" value="8"/>
+        <param name="ioDirection" value="input"/>
+      </params>
+    </Dev>
+    <Dev DevType="Gpio_out" entity="Gpio" iface="OcpCore">
+      <params>
+        <param name="bankCount" value="1"/>
+        <param name="bankWidth" value="8"/>
+        <param name="ioDirection" value="output"/>
+      </params>
+    </Dev>
+    <Dev DevType="Gpio_oe" entity="Gpio" iface="OcpCore">
+      <params>
+        <param name="bankCount" value="1"/>
+        <param name="bankWidth" value="8"/>
+        <param name="ioDirection" value="output"/>
       </params>
     </Dev>
   </Devs>

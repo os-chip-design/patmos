@@ -12,6 +12,7 @@ import Chisel._
 import java.io.File
 import chisel3.experimental._
 import chisel3.dontTouch
+import chisel3.util.ImplicitConversions.booleanToBool
 import Constants._
 import util._
 import io._
@@ -26,7 +27,7 @@ import scala.collection.mutable
 /**
  * Module for one Patmos core.
  */
-class PatmosCore(binFile: String, nr: Int, cnt: Int) extends Module {
+class PatmosCore(binFile: String, nr: Int, cnt: Int, oschip: Boolean) extends Module {
 
   val io = IO(new Bundle() with HasSuperMode with HasPerfCounter with HasInterrupts {
     override val superMode = Bool(OUTPUT)
@@ -37,6 +38,7 @@ class PatmosCore(binFile: String, nr: Int, cnt: Int) extends Module {
     val excInOut = new OcpCoreSlavePort(ADDR_WIDTH, DATA_WIDTH)
     val mmuInOut = new OcpCoreSlavePort(ADDR_WIDTH, DATA_WIDTH)
     val copInOut = Vec(COP_COUNT, new CoprocessorIO())
+    val boot = Input(new BootingIO)
   })
 
   val icache =
@@ -55,7 +57,7 @@ class PatmosCore(binFile: String, nr: Int, cnt: Int) extends Module {
       Module(new NullICache()) // return at least a dummy cache
     }
 
-  val fetch = Module(new Fetch(binFile))
+  val fetch = Module(new Fetch(binFile, oschip))
   val decode = Module(new Decode())
   val execute = Module(new Execute())
   val memory = Module(new Memory())
@@ -63,6 +65,7 @@ class PatmosCore(binFile: String, nr: Int, cnt: Int) extends Module {
   val exc = Module(new Exceptions())
   
   val dcache = Module(new DataCache())
+  fetch.io.boot <> io.boot
 
   //connect icache
   icache.io.feicache <> fetch.io.feicache
@@ -123,17 +126,20 @@ class PatmosCore(binFile: String, nr: Int, cnt: Int) extends Module {
   io.mmuInOut <> mmu.io.ctrl
   mmu.io.virt.M <> burstBus.io.master.M
   burstBus.io.master.S <> mmu.io.virt.S
+  
+  // External stall
+  val externalStall = Mux(oschip, io.boot.pc.stall, false.B)
 
   // Enable signals for memory stage, method cache and stack cache
-  memory.io.ena_in := icache.io.ena_out && !dcache.io.scIO.stall && execute.io.ena_out
-  icache.io.ena_in := memory.io.ena_out && !dcache.io.scIO.stall && execute.io.ena_out
-  dcache.io.scIO.ena_in := memory.io.ena_out && icache.io.ena_out && execute.io.ena_out
+  memory.io.ena_in := !externalStall && icache.io.ena_out && !dcache.io.scIO.stall && execute.io.ena_out
+  icache.io.ena_in := !externalStall && memory.io.ena_out && !dcache.io.scIO.stall && execute.io.ena_out
+  dcache.io.scIO.ena_in := !externalStall && memory.io.ena_out && icache.io.ena_out && execute.io.ena_out
 
   // Enable signals for execute stage
-  execute.io.ena_in := memory.io.ena_out && icache.io.ena_out && !dcache.io.scIO.stall
+  execute.io.ena_in := !externalStall && memory.io.ena_out && icache.io.ena_out && !dcache.io.scIO.stall
 
   // Enable signal
-  val enable = memory.io.ena_out & icache.io.ena_out & !dcache.io.scIO.stall & execute.io.ena_out
+  val enable = !externalStall & memory.io.ena_out & icache.io.ena_out & !dcache.io.scIO.stall & execute.io.ena_out
   fetch.io.ena := enable
   decode.io.ena := enable
   writeback.io.ena := enable
@@ -216,11 +222,11 @@ class Patmos(configFile: String, binFile: String, datFile: String) extends Modul
   Config.datFile = datFile
   val config = Config.getConfig
   val nrCores = config.coreCount
-
+  val oschip = config.oschip
   println("Config core count: " + nrCores)
 
   // Instantiate cores
-  val cores = (0 until nrCores).map(i => Module(new PatmosCore(binFile, i, nrCores)))
+  val cores = (0 until nrCores).map(i => Module(new PatmosCore(binFile, i, nrCores, oschip)))
 
   // Forward ports to/from core
   println("Config cmp: ")
@@ -289,6 +295,7 @@ class Patmos(configFile: String, binFile: String, datFile: String) extends Modul
     println(s"Config core $i:")
     // Default values for interrupt pins
       cores(i).io.interrupts := Vec.fill(INTR_COUNT) {false.B}
+    // add the RISC-V io
 
     // Creation of IO devices
     val cpuinfo = Module(new CpuInfo(Config.datFile, nrCores))
@@ -521,6 +528,10 @@ class Patmos(configFile: String, binFile: String, datFile: String) extends Modul
     memarbiter.io.slave.S <> ramCtrl.io.ocp.S
     ramCtrl.io.superMode := false.B
   }
+  if(oschip){
+    pinids("boot") = 0
+    pins("boot") = cores(0).io.boot
+  }
 
   override val io = IO(new PatmosBundle(pins.map{case (pinid, devicepin) => pinid -> DataMirror.internal.chiselTypeClone(devicepin)}.toSeq: _*))
 
@@ -567,6 +578,37 @@ class TestTrait() extends CoreDevice2() {
   })*/
 
 }*/
+class PatmosChip(configFile: String, binFile: String, datFile: String) extends Module{
+  val pins = scala.collection.mutable.ListMap[String, Data]() // One main mapping for the top level pins
+  val patmos = Module(new Patmos(configFile, binFile, datFile))
+  val wishbone = Module(new WishboneSlave)
+  patmos.io.elements("boot") := wishbone.io.patmos.boot
+  patmos.reset := wishbone.io.patmos.boot.pc.reset
+  // Here you can add io to the top level
+  for((pinid, pin) <- wishbone.io.wb.elements){
+    pins("wishbone_" + pinid) = pin // Adding all of the wishbone io
+  }
+  pins("led") = patmos.io.elements("Leds_led") // Adding LEDs
+  pins("uart_tx") = patmos.io.elements("UartCmp_tx") // Adding UART
+  pins("uart_rx") = patmos.io.elements("UartCmp_rx")
+  patmos.io.elements("UartCmp_rx") := pins("uart_rx")
+  pins("gpio_out") = patmos.io.elements("Gpio_out_gpios") // Adding GPIO
+  pins("gpio_in") = patmos.io.elements("Gpio_in_gpios")
+  patmos.io.elements("Gpio_in_gpios") := pins("gpio_in")
+  pins("gpio_oe") = patmos.io.elements("Gpio_oe_gpios")
+  
+  // Then we seal the deal by creating the actual io bundle, and connecting it to the components
+  override val io = IO(new PatmosBundle(pins.map{case (pinid, devicepin) => pinid -> DataMirror.internal.chiselTypeClone(devicepin)}.toSeq: _*))
+
+  for((pinid, devicepin) <- pins) {
+    val patmospin = io.elements(pinid)
+    DataMirror.specifiedDirectionOf(devicepin).toString match {
+        case "Input" => devicepin := patmospin
+        case "Output" => patmospin := devicepin
+        case "Unspecified" => attach(devicepin.asInstanceOf[Analog], patmospin.asInstanceOf[Analog])
+    }
+  }
+}
 
 object PatmosMain extends App {
 
@@ -577,5 +619,10 @@ object PatmosMain extends App {
 	  
   new java.io.File("build/").mkdirs // build dir is created
   Config.loadConfig(configFile)
-  (new chisel3.stage.ChiselStage).emitVerilog(new Patmos(configFile, binFile, datFile), chiselArgs)
+  if(Config.getConfig.oschip){
+    (new chisel3.stage.ChiselStage).emitVerilog(new PatmosChip(configFile, binFile, datFile), chiselArgs)
+  } else{
+    (new chisel3.stage.ChiselStage).emitVerilog(new Patmos(configFile, binFile, datFile), chiselArgs)
+  }
+  
 }
