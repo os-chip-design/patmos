@@ -19,6 +19,7 @@ object Gpio extends DeviceObject {
   var ioDirection : Boolean = false //type declaration necessary otherwise scala complains
 
   def init(params: Map[String, String]) = {
+    /*
     bankCount = getPosIntParam(params, "bankCount")
     bankWidth = getPosIntParam(params, "bankWidth")
     if("Output".equalsIgnoreCase(getParam(params, "ioDirection"))){
@@ -26,10 +27,18 @@ object Gpio extends DeviceObject {
     } else if ("Input".equalsIgnoreCase(getParam(params, "ioDirection"))){
       ioDirection = true
     }
+    */
   }
 
   def create(params: Map[String, String]) : Gpio = {
-          Module(new Gpio(bankCount, bankWidth, ioDirection))
+    bankCount = getPosIntParam(params, "bankCount")
+    bankWidth = getPosIntParam(params, "bankWidth")
+    if("Output".equalsIgnoreCase(getParam(params, "ioDirection"))){
+      ioDirection = false
+    } else if ("Input".equalsIgnoreCase(getParam(params, "ioDirection"))){
+      ioDirection = true
+    }
+    Module(new Gpio(bankCount, bankWidth, ioDirection))
   }
 }
 
