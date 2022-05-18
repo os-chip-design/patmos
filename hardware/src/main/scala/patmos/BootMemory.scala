@@ -2,7 +2,7 @@ package patmos
 
 import Chisel._
 import chisel3.dontTouch
-
+import chisel3.VecInit
 import Constants._
 
 import util.Utility
@@ -41,29 +41,25 @@ class BootMemory(fileName : String) extends Module{
   rom.io.addressOdd := rdAddrOddReg(BOOT_ROM_ADDR_WIDTH - 1, 1)
 
   // Writable memory even
-  val memWithWrEven = Module(new MemBlock(size = WRITABLE_BOOT_ENTRIES / 2, INSTR_WIDTH))
-  memWithWrEven.io.rdAddr := (io.read.addrEven - BOOT_ROM_ENTRIES.U)(BOOT_ROM_ADDR_WIDTH - 1, 1) // Read address input
-  memWithWrEven.io.wrAddr := io.write.addrEven // Write address input
-  memWithWrEven.io.wrData := io.write.dataEven // Write data input
-  memWithWrEven.io.wrEna := io.write.enaEven // Write enable
+  val memWithWrEven = util.SRAM._32x256(clock)
+  memWithWrEven.write(io.write.enaEven.asBool)(io.write.addrEven, io.write.dataEven, VecInit(1.B,1.B,1.B,1.B))
+  val readEven = memWithWrEven.read(io.read.addrEven - BOOT_ROM_ENTRIES.U)(BOOT_ROM_ADDR_WIDTH - 1, 1)
 
   // Writable memory odd
-  val memWithWrOdd = Module(new MemBlock(size = WRITABLE_BOOT_ENTRIES / 2, INSTR_WIDTH))
-  memWithWrOdd.io.rdAddr := (io.read.addrOdd - BOOT_ROM_ENTRIES.U)(BOOT_ROM_ADDR_WIDTH - 1, 1) // Read address input
-  memWithWrOdd.io.wrAddr := io.write.addrOdd // Write address input
-  memWithWrOdd.io.wrData := io.write.dataOdd // Write data input
-  memWithWrOdd.io.wrEna := io.write.enaOdd // Write enable
+  val memWithWrOdd = util.SRAM._32x256(clock)
+  memWithWrOdd.write(io.write.enaOdd.asBool)(io.write.addrOdd, io.write.dataOdd, VecInit(1.B,1.B,1.B,1.B))
+  val readOdd = memWithWrOdd.read(io.read.addrOdd - BOOT_ROM_ENTRIES.U)(BOOT_ROM_ADDR_WIDTH - 1, 1)
 
   // Switch between ROM and writable memory
   when(rdAddrEvenReg > UInt(BOOT_ROM_ENTRIES - 1)){
-    io.read.dataEven := memWithWrEven.io.rdData
+    io.read.dataEven := readEven
   }. otherwise {
     io.read.dataEven := rom.io.instructionEven
   }
   
   // Switch between ROM and writable memory
   when(rdAddrOddReg > UInt(BOOT_ROM_ENTRIES - 1)){
-    io.read.dataOdd := memWithWrOdd.io.rdData
+    io.read.dataOdd := readOdd
   }. otherwise {
     io.read.dataOdd := rom.io.instructionOdd
   }
