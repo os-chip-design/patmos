@@ -10,7 +10,7 @@
   <CmpDev name="Argo" />
   </CmpDevs> -->
 
-   <ExtMem size="32k" DevTypeRef="OCRam" />
+   <!--<ExtMem size="32k" DevTypeRef="OCRam" />-->
    <ExtMem size="2M" DevTypeRef="OCPburst_SPI_memory" />
 
   <IOs>
@@ -26,10 +26,14 @@
     <Dev DevType="OCPburst_SPI_memory" entity="OCPburst_SPI_memory" iface="OcpBurst">
       <params> </params>
     </Dev>
+
+    <!--
     <Dev DevType="OCRam" entity="OCRamCtrl" iface="OcpBurst">
       <params>
          <param name="sramAddrWidth" value="15" />
       </params>
     </Dev>
+    -->
+
   </Devs>
 </patmos>
