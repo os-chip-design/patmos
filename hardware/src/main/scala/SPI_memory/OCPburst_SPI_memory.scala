@@ -1,10 +1,10 @@
-package SPI_memory
+package io
 
 import chisel3._
 import chisel3.util._
+import SPI_memory._
 import ocp._
 import chisel3.experimental.chiselName
-import io._
 import patmos.Constants._
 
 object OCPburst_SPI_memory extends DeviceObject {
@@ -144,8 +144,6 @@ class OCPburst_SPI_memory(count_s_clock: Int = 4, startup_count_to : Int = 0x3FF
         StateReg := idle
       }
     }
-
-
   }
 }
 
