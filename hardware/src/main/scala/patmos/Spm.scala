@@ -18,10 +18,10 @@
 package patmos
 
 import Chisel._
-
 import Constants._
-
+import chisel3.VecInit
 import ocp._
+import util.SRAM
 
 class Spm(size: Int) extends Module {
   val io = IO(new OcpCoreSlavePort(log2Up(size), DATA_WIDTH))
@@ -36,6 +36,7 @@ class Spm(size: Int) extends Module {
 
   if (size > 0) {
     // generate byte memories
+    /*
     val mem = new Array[MemBlockIO](BYTES_PER_WORD)
     for (i <- 0 until BYTES_PER_WORD) {
       mem(i) = MemBlock(size / BYTES_PER_WORD, BYTE_WIDTH, bypass = false).io
@@ -51,7 +52,13 @@ class Spm(size: Int) extends Module {
     // load
     val rdData = mem.map(_(io.M.Addr(addrUInt + 1, 2))).reduceLeft((x,y) => y ## x)
 
+
+     */
+    val mem = SRAM._32x256(clock)
+
+    mem.write(io.M.Cmd === OcpCmd.WR)(io.M.Addr(addrUInt + 1, 2), io.M.Data, VecInit(io.M.ByteEn.toBools()))
+
     // return actual data
-    io.S.Data := rdData
+    io.S.Data := mem.read(io.M.Addr(addrUInt + 1, 2))
   }
 }
