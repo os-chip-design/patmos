@@ -596,6 +596,11 @@ class PatmosChip(configFile: String, binFile: String, datFile: String) extends M
   pins("gpio_in") = patmos.io.elements("Gpio_in_gpios")
   patmos.io.elements("Gpio_in_gpios") := pins("gpio_in")
   pins("gpio_oe") = patmos.io.elements("Gpio_oe_gpios")
+  println("Patmos pins:")
+  println(patmos.io.elements)
+  pins("spi_out") = patmos.io.elements("OCPburst_SPI_memory_spiOut")
+  pins("spi_in") = patmos.io.elements("OCPburst_SPI_memory_spiIn")
+  patmos.io.elements("OCPburst_SPI_memory_spiIn") := pins("spi_in")
   
   // Then we seal the deal by creating the actual io bundle, and connecting it to the components
   override val io = IO(new PatmosBundle(pins.map{case (pinid, devicepin) => pinid -> DataMirror.internal.chiselTypeClone(devicepin)}.toSeq: _*))
