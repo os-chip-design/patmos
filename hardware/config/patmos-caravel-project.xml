@@ -21,9 +21,9 @@
   <DCache size="0k" assoc="1" repl="" writeThrough="true" />
   <SCache size="0k" />
   <ISPM size="0k" />
-  <DSPM size="0k" />
+  <DSPM size="1k" />
 
-  <ExtMem size="1k" DevTypeRef="OCRam" />
+  <ExtMem size="2M" DevTypeRef="OCPburst_SPI_memory" />
 
   <IOs>
     <IO DevTypeRef="Timer" offset="2" intrs="0,1" allcores="true" />
@@ -42,10 +42,8 @@
         <param name="ledCount" value="1"/>
       </params>
     </Dev>
-    <Dev DevType="OCRam" entity="OCRamCtrl" iface="OcpBurst">
-      <params>
-         <param name="sramAddrWidth" value="10" />
-      </params>
+    <Dev DevType="OCPburst_SPI_memory" entity="OCPburst_SPI_memory" iface="OcpBurst">
+      <params> </params>
     </Dev>
     <Dev DevType="Gpio_in" entity="Gpio" iface="OcpCore">
       <params>
